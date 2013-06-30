@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <script src="game.js" type="text/javascript"></script>
+        <style>
+            body {
+                font-size: 25px;
+            }
+            .bonus_cards {
+                color: rgb( 192,192,192);
+            }
+        </style>
+    </head>
+    <body onload="startGame();">
+        <p id="status"></p>
+        <canvas id='game' width="750" height="750">
+
+        </canvas>
+        <div>
+            <span id="cards">
+            </span>
+            <form>
+                <input id="end_turn_button" type="button" value="End Turn" />
+            </form>
+        </div>
+
+        <div id="build_menu" style="display: none; position: absolute; border: 1px solid; padding: 3px; background-color: white;">
+            <form id="build_menu_form" style="margin: 0px;">
+                <input id="build0" type="button" value="Destroy" name="0" />
+                <input id="build1" type="button" value="Road" name="1" />
+                <input id="build2" type="button" value="Pipe" name="2"/>
+                <input id="build3" type="button" value="Line" name="3"/>
+                <input id="build4" type="button" value="Fibre" name="4"/>
+            </form>
+        </div>
+    </body>
+</html>
