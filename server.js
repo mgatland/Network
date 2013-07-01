@@ -8,16 +8,15 @@ var io = require('socket.io').listen(app.listen(port));
 console.log("listening on port " + port);
 
 var shared = require('./js/shared');
-var game = new shared.game();
-
 
 var users = [ ];
+
+io.set('log level', 1); // reduce connection logging
 
 // routing
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
-
 
 app.use("/js", express.static(__dirname + '/js'));
 
@@ -28,9 +27,31 @@ io.sockets.on('connection', function (socket) {
  
     console.log((new Date()) + ' Connection accepted.');
 
-//    socket.on('cmd', processCommand);
+    console.log("Start new game.");
+    var game = new shared.game();
 
+    function sendUpdateToClient() {
+        user.socket.emit('gamestate', game.serialise());
+    }
+
+    sendUpdateToClient();
+    
     socket.on('disconnect', function(){
         console.log((new Date()) + " Peer disconnected.");
       });
+
+    socket.on('buildElement', function (data) {
+        game.buildElement( data.edge_coord, data.player_index, data.element_type);
+        sendUpdateToClient();
+    });
+
+    socket.on('destroyElement', function (data) {
+        game.destroyElement( data.edge_coord, data.player_index);
+        sendUpdateToClient();
+    });
+
+    socket.on('nextPlayerTurn', function (data) {
+        game.nextPlayerTurn();
+        sendUpdateToClient();
+    });
 });

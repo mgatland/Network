@@ -42,6 +42,13 @@
 	    this.has_claimed_road_source = false;
 	}
 
+	player.prototype.updateData = function (data) {
+		this.points = data.points;
+		this.cards = data.cards;
+		this.next_turn_bonus_cards = data.next_turn_bonus_cards;
+		this.has_claimed_road_source = data.has_claimed_road_source;
+	}
+
 	player.prototype.giveBonusCard = function ( ) {
 
 	    if( this.next_turn_bonus_cards.length >= 1 )
@@ -71,43 +78,59 @@
 	    return this.cards.some( function( c ) { return c == element_type || c == 0; } );
 	}
 
+	function initCells () {
+		var cells = new Array(board_height);
+	    for( var y = 0; y < board_height; ++y ) {
+	        cells[y] = new Array(board_width);
+	        for (var x = 0; x < board_width; ++x)
+	            cells[y][x] = new cell();
+	    }
+	    return cells;
+	}
+
+	function initEdges () {
+	    var edges = [[],[]];
+	    for (var i = 0; i < 2; ++i) {
+	        var height = board_height + (i == 0 ? 1 : 0);
+	        edges[i] = new Array(height);
+	        for (var y = 0; y < height; ++y) {
+	            var width = board_width + (i == 0 ? 0 : 1);
+	            edges[i][y] = new Array(width);
+	            for (var x = 0; x < width; ++x) {
+	                edges[i][y][x] = new edge();
+	            }
+	        }
+	    }
+	    return edges;
+	}
+
+	function initPlayers() {
+		return [ new player(), new player()];
+	}
+
+	function initCorners() {
+	    var corners = new Array(board_height + 1);
+	    for (var y = 0; y < board_height + 1; ++y) {
+	        corners[y] = new Array(board_width + 1);
+	        for (var x = 0; x < board_width + 1; ++x) {
+	            corners[y][x] = new corner();
+	        }
+	    }
+	    return corners;
+	}
+
 	function game( ) {
 	    var self = this;
-	    this.players = [ new player(), new player()];
+	    this.players = initPlayers();
 
 
 	    this.last_player_index = 0;
 
-	    //Init edges
-	    this.edges = [[],[]];
-	    for (var i = 0; i < 2; ++i) {
-	        var height = board_height + (i == 0 ? 1 : 0);
-	        this.edges[i] = new Array(height);
-	        for (var y = 0; y < height; ++y) {
-	            var width = board_width + (i == 0 ? 0 : 1);
-	            this.edges[i][y] = new Array(width);
-	            for (var x = 0; x < width; ++x) {
-	                this.edges[i][y][x] = new edge();
-	            }
-	        }
-	    }
+	    this.edges = initEdges();
 
-	    //Init corners
-	    this.corners = new Array(board_height + 1);
-	    for (var y = 0; y < board_height + 1; ++y) {
-	        this.corners[y] = new Array(board_width + 1);
-	        for (var x = 0; x < board_width + 1; ++x) {
-	            this.corners[y][x] = new corner();
-	        }
-	    }
+	    this.corners = initCorners();
 
-	    //Init cells
-	    this.cells = new Array(board_height);
-	    for( var y = 0; y < board_height; ++y ) {
-	        this.cells[y] = new Array(board_width);
-	        for (var x = 0; x < board_width; ++x)
-	            this.cells[y][x] = new cell();
-	    }
+	    this.cells = initCells();
 
 	    //Random roads on edges of board
 	    this.corners[0][ Math.floor( Math.random() * ( board_width - 1 ) ) + 1 ].source = { type: utility_type_road, owner: null };
@@ -138,7 +161,6 @@
 
 	    this.propogateOwnership();
 	}
-
 
 	game.prototype.traveseGraph = function( utility_type, player_index, start_corner_coord, propogate_to_neutral ) {
 
@@ -311,8 +333,6 @@
 	        this.players[ this.last_player_index ].giveBonusCard();
 	}
 
-
-
 	game.prototype.nextPlayerTurn = function() {
 	    this.players[ this.last_player_index ].onEndTurn();
 	    ++this.last_player_index;
@@ -484,6 +504,38 @@
 	        return [{ x: edge_coord.x, y: edge_coord.y }, { x: edge_coord.x, y: edge_coord.y + 1 }];
 	}
 
+	game.prototype.serialise = function () {
+		var data = {};
+		data.cells = this.cells;
+		data.edges = this.edges;
+		data.corners = this.corners;
+		data.players = this.players;
+		data.last_player_index = this.last_player_index;
+		return data;
+	}
+
+	function ClientGame() {
+		this.cells = initCells();
+		this.edges = initEdges();
+		this.players = initPlayers();
+		this.corners = initCorners();
+		this.last_player_index = 0;
+	}
+	ClientGame.prototype.canBuildElement = game.prototype.canBuildElement;
+	ClientGame.prototype.canDestroyElement = game.prototype.canDestroyElement;
+
+	ClientGame.prototype.updateData = function (data) {
+		this.cells = data.cells;
+		this.edges = data.edges;
+		this.corners = data.corners;
+		this.last_player_index = data.last_player_index;
+
+		for (var i = 0; i < this.players.length; i++) {
+			this.players[i].updateData(data.players[i]);
+		}
+	}
+
+	exports.ClientGame = ClientGame;
 	exports.game = game;
 	console.log("Shared code added");
 

@@ -16,8 +16,6 @@ var global_game;
 
 var port = 80;
 
-//Client classes
-
 //Client functions
 function connect() {
     console.log("connecting to port " + port);
@@ -25,6 +23,25 @@ function connect() {
     socket.on('connect', function () {
         console.log("Connected.");
     });
+
+    socket.on('gamestate', function (data) {
+        console.log(data);
+        global_game.updateData(data);
+        drawBoard(global_game, ctx);
+        updateStatus( global_game );
+    });
+
+    ClientGame.prototype.buildElement = function(edge_coord, player_index, element_type) {
+        socket.emit('buildElement', { edge_coord: edge_coord, player_index: player_index, element_type: element_type});
+    }
+
+    ClientGame.prototype.destroyElement = function(edge_coord, player_index) {
+        socket.emit('destroyElement', { edge_coord: edge_coord, player_index: player_index});
+    }
+
+    ClientGame.prototype.nextPlayerTurn = function() {
+        socket.emit('nextPlayerTurn');
+    }
 }
 
 function startGame() {
@@ -33,8 +50,12 @@ function startGame() {
 
     cell_width = (width - border * 2) / board_width;
 
+<<<<<<< Updated upstream
     global_game = new game();
 }
+=======
+    global_game = new ClientGame();
+>>>>>>> Stashed changes
 
 
 function startGame2d( game ) {
@@ -322,9 +343,10 @@ function buildButton(e) {
 
     var menu_box = document.getElementById("build_menu");
     menu_box.style.display = "none";
+    // wait for server
 
-    drawBoard(global_game, ctx);
-    updateStatus( global_game );
+    // drawBoard(global_game, ctx);
+    // updateStatus( global_game );
 }
 
 
