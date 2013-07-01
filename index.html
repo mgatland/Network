@@ -19,7 +19,7 @@
             uniform mat4 view_proj;
 
             attribute vec3 local_position;
-            //attribute vec3 local_normal;
+            attribute vec3 local_normal;
             //attribute vec4 local_tangent;
             //attribute vec2 local_uv;
             
@@ -27,16 +27,18 @@
             //varying vec3 tangent_light_direction;
             //varying vec4 colour;
 
+            varying float light;
+
             void main()
             {
                 vec4 world_position = world * vec4( local_position, 1.0 );
-                //vec3 world_normal = normalize( mat3( world ) * local_normal );
+                vec3 world_normal = normalize( mat3( world ) * local_normal );
                 //vec3 world_tangent = normalize( mat3( world ) * local_tangent.xyz ); 
 
                 //vec3 world_binormal = -cross( world_normal, world_tangent ) * local_tangent.w;
 
-                //vec3 light_position = vec3( -400.0, -600.0, -1000.0);
-                //vec3 light_direction = light_position - world_position.xyz;
+                vec3 light_direction = normalize( vec3( -1.0, -1.0, 1.0 ) );
+                light = dot( light_direction, world_normal );
                 //tangent_light_direction.xyz = vec3( dot( world_tangent, light_direction ), dot( world_binormal, light_direction ), dot( world_normal, light_direction ) );
 
                 gl_Position = view_proj * world_position;
@@ -53,7 +55,7 @@
 
             //varying vec2 uv;
             //varying vec3 tangent_light_direction;
-
+            varying float light;
             uniform vec4 colour;
 
             void main()
@@ -79,7 +81,7 @@
                 //vec3 result = albedo.xyz * diffuse + specular + ambient;
 
                 //gl_FragColor = vec4( pow( result, vec3( 2.2, 2.2, 2.2 ) ), albedo.w );
-                gl_FragColor = colour;
+                gl_FragColor = colour * light;
             }
         </script> 
     </head>
@@ -87,7 +89,7 @@
         <p id="status"></p>
         <canvas id='game' width="450" height="450" style="display: inline-block;">
         </canvas>
-        <canvas id='game3d' style="display: inline-block;" width="500" height="500">
+        <canvas id='game3d' style="display: inline-block;" width="800" height="800">
         </canvas>
         <div>
             <span id="cards">

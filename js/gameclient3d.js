@@ -3,7 +3,9 @@
 function bindBuffer( shader ) {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
     this.gl.enableVertexAttribArray(shader.position_attribute);
-    this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 12, 0);
+    this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 24, 0);
+    this.gl.enableVertexAttribArray(shader.normal_attribute)
+    this.gl.vertexAttribPointer(shader.normal_attribute, 3, this.gl.FLOAT, false, 24, 12);
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.index_buffer);
 }
 
@@ -33,10 +35,10 @@ function boardModel( gl ) {
 	mat4.identity( this.transform );
 
 	var vertices = [
-		0.0, 0.0, 0.0,
-		board_width, 0.0, 0.0,
-		board_width, board_height, 0.0,
-		0.0, board_height, 0.0
+		0.0, 0.0, 0.0, 					0.0, 0.0, 1.0,
+		board_width, 0.0, 0.0, 			0.0, 0.0, 1.0,
+		board_width, board_height, 0.0, 0.0, 0.0, 1.0,
+		0.0, board_height, 0.0, 		0.0, 0.0, 1.0
 	];
 
 	var indices = [
@@ -74,12 +76,18 @@ function gridLineModel( gl ) {
 	var vertices = [ ];
 	for( var x = 0; x <= board_width; ++x ) {
 		vertices.push( x ); vertices.push( 0 ); vertices.push( 0 );
+		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+
 		vertices.push( x ); vertices.push( board_height ); vertices.push( 0 );
+		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
 	}
 
 	for( var y = 0; y <= board_height; ++y ) {
 		vertices.push( 0 ); vertices.push( y ); vertices.push( 0 );
+		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+
 		vertices.push( board_width ); vertices.push( y ); vertices.push( 0 );
+		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
 	}
 
 
@@ -117,14 +125,14 @@ function houseModel( gl, height ) {
 	var height_scale = height * ( Math.random() * 0.5 + 0.75 );
 
 	var vertices = [
-		-width_scale, -width_scale, 0.0,
-		width_scale, -width_scale, 0.0,
-		width_scale, width_scale, 0.0,
-		-width_scale, width_scale, 0.0,
-		-width_scale, -width_scale, height_scale,
-		width_scale, -width_scale, height_scale,
-		width_scale, width_scale, height_scale,
-		-width_scale, width_scale, height_scale,
+		-width_scale, -width_scale, 0.0,			0.0, 0.0, 1.0,
+		width_scale, -width_scale, 0.0,				0.0, 0.0, 1.0,
+		width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
+		-width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
+		-width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
+		width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
+		width_scale, width_scale, height_scale,		0.0, 0.0, 1.0,
+		-width_scale, width_scale, height_scale,	0.0, 0.0, 1.0
 	];
 
 	var indices = [
@@ -154,7 +162,85 @@ function houseModel( gl, height ) {
 houseModel.prototype.bindBuffer = bindBuffer;
 houseModel.prototype.draw = draw;
 
+function cellDisplay( game, house_models, x, y ) {
+	this.house_models = house_models;
+	this.game = game;
+	this.level = 0;
+	this.x = x;
+	this.y = y;
 
+	this.previous_houses_sink = null;
+	this.previous_houses = null;
+	this.current_houses = [];
+	this.current_houses_raise = null;
+
+	this.setToLevel( this.game.cells[ y ][ x ].level );
+}
+
+cellDisplay.prototype.setToLevel = function( level ) {
+	this.level = level;
+
+	this.previous_houses = this.current_houses;
+	this.previous_houses_sink = 0.0;
+	this.current_houses = [];
+	if( this.level < 2 )
+		return;
+
+	var spawn_chance = [ 0.5, 0.8, 0.9 ];
+
+	for( var y = 0; y < 3; ++y )
+		for( var x = 0; x < 3; ++x ) {
+
+			if( Math.random() > spawn_chance[ this.level - 2 ] )
+				continue;
+
+			var transform = mat4.create();
+			mat4.identity( transform );
+			mat4.translate( transform, [ this.x + x * 0.25 + 0.25, this.y + y * 0.25 + 0.25, 0.0 ] );
+
+			var house =  Object.create( this.house_models[ this.level - 2 ][ Math.floor( Math.random() * this.house_models[ this.level - 2 ].length ) ] );
+			house.transform = transform;
+
+			this.current_houses.push( house );
+		}
+
+	this.current_houses_raise = -0.7;
+}
+
+cellDisplay.prototype.draw = function( shader ) {
+	if( this.previous_houses )
+		for( var i = 0; i < this.previous_houses.length; ++i )
+			this.previous_houses[ i ].draw( shader );
+	for( var i = 0; i < this.current_houses.length; ++i )
+		this.current_houses[ i ].draw( shader );
+}
+
+cellDisplay.prototype.frameMove = function( elapsed_time ) {
+	var cell = this.game.cells[ this.y ][ this.x ];
+	if( cell.level != this.level )
+		this.setToLevel( cell.level );
+
+	if( this.previous_houses_sink !== null ) {
+		this.previous_houses_sink -= elapsed_time * 1.0;
+		for( var i = 0; i < this.previous_houses.length; ++i ) {
+			this.previous_houses[ i ].transform[ 14 ] = this.previous_houses_sink;
+		}
+
+		if( this.previous_houses_sink <= -1.0 ) {
+			this.previous_houses_sink = null;
+			this.previous_houses = null;
+		}
+
+	}
+
+	if( this.current_houses_raise !== null ) {
+		this.current_houses_raise = Math.min( this.current_houses_raise + elapsed_time * 0.7, 0.0 );
+		for( var i = 0; i < this.current_houses.length; ++i )
+			this.current_houses[ i ].transform[ 14 ] = this.current_houses_raise;
+		if( this.current_houses_raise >= 0.0 )
+			this.current_houses_raise = null;
+	}
+}
 
 function gameDisplay3d( game ) {
 	this.game = game;
@@ -166,6 +252,7 @@ function gameDisplay3d( game ) {
     mat4.identity( this.rotation_matrix );
 
 	var self = this;
+	var cell_displays = null;
 
 	this.canvas.onmousemove = function (e) { self.HandleMouseMove(e); };
     this.canvas.onmousedown = function (e) { self.HandleMouseDown(e); };
@@ -229,11 +316,23 @@ gameDisplay3d.prototype.resetContext = function( ) {
     this.board_model = new boardModel( this.gl );
     this.grid_model = new gridLineModel( this.gl );
 
-    this.small_house_model = [ new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ) ];
+    this.house_models = [
+    	[ new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ) ],
+    	[ new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ) ],
+    	[ new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ) ]
+    ];
+
+    this.cell_displays = new Array( board_height );
+    for( var y = 0; y < board_height; ++y ) {
+    	this.cell_displays[ y ] = new Array( board_width );
+    	for( var x = 0; x < board_width; ++x ) {
+    		this.cell_displays[ y ][ x ] = new cellDisplay( this.game, this.house_models, x, y );
+    	}
+    }
 }
 
 gameDisplay3d.prototype.lostContext = function( ) {
-	this.small_house_model = null;
+	this.house_models = null;
 	this.grid_model = null;
 	this.board_model = null;
 	this.shader = null;
@@ -253,6 +352,12 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     var current_time = new Date().getTime();
     var elapsed_time = ( current_time - this.last_time ) / 1000.0;
     this.last_time = current_time;
+
+    for( var y = 0; y < board_height; ++y ) {
+    	for( var x = 0; x < board_width; ++x ) {
+    		this.cell_displays[ y ][ x ].frameMove( elapsed_time );
+    	}
+    }
 
     //Handle window size change
     if (this.canvas.clientWidth != this.canvas.width || this.canvas.clientHeight != this.height)
@@ -294,7 +399,12 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     this.board_model.draw( this.shader );
     this.grid_model.draw( this.shader );
 
-    this.house_model.draw( this.shader );
+    for( var y = 0; y < board_height; ++y ) {
+    	for( var x = 0; x < board_width; ++x ) {
+    		this.cell_displays[ y ][ x ].draw( this.shader );
+    	}
+    }
+
 }
 
 function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
@@ -311,7 +421,7 @@ function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
 
     this.position_attribute = gl.getAttribLocation(this.shader_program, "local_position");
     // this.uv_attribute = gl.getAttribLocation(this.shader_program, "local_uv");
-    // this.normal_attribute = gl.getAttribLocation(this.shader_program, "local_normal");
+    this.normal_attribute = gl.getAttribLocation(this.shader_program, "local_normal");
     // this.tangent_attribute = gl.getAttribLocation(this.shader_program, "local_tangent");
     // this.bone_indices_attribute = gl.getAttribLocation(this.shader_program, "bone_indices");
     // this.blend_weights_attribute = gl.getAttribLocation(this.shader_program, "blend_weights");
