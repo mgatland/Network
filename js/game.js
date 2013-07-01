@@ -292,8 +292,6 @@ function mouseToElement(coords) {
     return { type: element_type_cell, x: cell_x, y: cell_y };
 }
 
-
-
 function updateStatus( game ) {
 
     var status_text = '';
