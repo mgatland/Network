@@ -4,7 +4,7 @@ var height = 750;
 
 var border = 20;
 
-var cell_width; //initialise after shared file has loaded
+var cell_width; //must be initialised after shared file has loaded
 
 var utility_letter = ['?', 'R', 'W', 'E', 'I'];
 var player_colours = ['blue', 'green'];
@@ -14,11 +14,23 @@ var ctx;
 
 var global_game;
 
+var port = 80;
+
 //Client classes
 
 //Client functions
 
+function connect() {
+    console.log("connecting to port " + port);
+    socket = io.connect("http://" + document.domain + ":" + port);
+    socket.on('connect', function () {
+        console.log("Connected.");
+    });
+}
+
 function startGame() {
+
+    connect();
 
     cell_width = (width - border * 2) / board_width;
 
