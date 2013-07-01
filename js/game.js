@@ -44,20 +44,6 @@ function connect() {
     }
 }
 
-function startGame() {
-
-    connect();
-
-    cell_width = (width - border * 2) / board_width;
-
-<<<<<<< Updated upstream
-    global_game = new game();
-}
-=======
-    global_game = new ClientGame();
->>>>>>> Stashed changes
-
-
 function startGame2d( game ) {
     var canvas = document.getElementById('game');
     ctx = canvas.getContext("2d");
@@ -68,6 +54,13 @@ function startGame2d( game ) {
     document.getElementById("build_menu_form").addEventListener('click', buildButton);
 
     document.getElementById("end_turn_button").addEventListener( 'click', endTurnButton );
+
+
+    connect();
+
+    cell_width = (width - border * 2) / board_width;
+
+    global_game = new ClientGame();
 
     drawBoard(global_game, ctx);
     updateStatus( global_game );  
