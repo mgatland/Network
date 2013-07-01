@@ -7,7 +7,9 @@ var port = process.env.PORT || 80;
 var io = require('socket.io').listen(app.listen(port));
 console.log("listening on port " + port);
 
-//var shared = require('./shared/shared');
+var shared = require('./js/shared');
+var game = new shared.game();
+
 
 var users = [ ];
 
@@ -15,6 +17,7 @@ var users = [ ];
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
+
 
 app.use("/js", express.static(__dirname + '/js'));
 
