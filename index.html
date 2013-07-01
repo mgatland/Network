@@ -85,6 +85,11 @@
     </head>
     <body onload="startGame(); startGame2d( global_game ); game_display_3d = new gameDisplay3d( global_game );" style="white-space: nowrap;">
         <p id="status"></p>
+        <form id="network_options_form">
+            <input id="localMultiplayerButton" type="button" value="Play locally" name="localMultiplayer" />
+            <input id="networkMultiplayerButton" type="button" value="Find an opponent online" name="networkMultiplayer" />
+        </form>
+        <div id="serverMessages"></div>
         <canvas id='game' width="450" height="450" style="display: inline-block;">
         </canvas>
         <canvas id='game3d' style="display: inline-block;" width="500" height="500">
