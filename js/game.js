@@ -1,4 +1,7 @@
 //Clent globals
+
+var localPlayers = [];
+
 var width = 450;
 var height = 450;
 
@@ -31,6 +34,14 @@ function connect() {
         updateStatus( global_game );
     });
 
+    socket.on('message', function (msg) {
+        document.getElementById('serverMessages').innerHTML = msg; //TODO: security
+    });
+
+    socket.on('localPlayers', function (players) {
+        localPlayers = players;
+    });
+
     ClientGame.prototype.buildElement = function(edge_coord, player_index, element_type) {
         socket.emit('buildElement', { edge_coord: edge_coord, player_index: player_index, element_type: element_type});
     }
@@ -51,6 +62,19 @@ function startGame() {
     cell_width = (width - border * 2) / board_width;
 
     global_game = new ClientGame();
+
+    var networkOptionsForm = document.getElementById('network_options_form');
+
+    document.getElementById('localMultiplayerButton').addEventListener('click', function () {
+        socket.emit('startLocalGame');
+        networkOptionsForm.style.display = "none";
+
+    });
+
+    document.getElementById('networkMultiplayerButton').addEventListener('click', function () {
+        socket.emit('startNetworkGame');
+        networkOptionsForm.style.display = "none";
+    });
 }
 
 function startGame2d( game ) {
@@ -294,15 +318,32 @@ function mouseToElement(coords) {
     return { type: element_type_cell, x: cell_x, y: cell_y };
 }
 
+function isMyTurn ( game ) {
+    return localPlayers.indexOf(game.last_player_index) >= 0;
+}
+
 function updateStatus( game ) {
 
     var status_text = '';
+
+    if (!game.started) return;
 
     for( var player_index = 0; player_index < game.players.length; ++player_index ) {
         status_text += "Player " +( player_index + 1) + ": " + game.players[ player_index ].points + " ";
     }
 
-    status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
+
+    var myTurn = isMyTurn( game );
+
+    if (myTurn) {
+        if (localPlayers.length == 1) {
+            status_text += '<br>Your turn'
+        } else {
+            status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
+        }
+    } else {
+        status_text += "<br>Remote player's turn";
+    }
 
     document.getElementById("status").innerHTML = status_text;
 
@@ -344,6 +385,10 @@ function buildButton(e) {
 
 
 function show_build_menu(edge_coord, e, player_index ) {
+
+    if (!isMyTurn( global_game ))
+        return;
+
     build_edge_coord = edge_coord;
 
     var menu_box = document.getElementById("build_menu");

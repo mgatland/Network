@@ -520,11 +520,13 @@
 		this.players = initPlayers();
 		this.corners = initCorners();
 		this.last_player_index = 0;
+		this.started = false;
 	}
 	ClientGame.prototype.canBuildElement = game.prototype.canBuildElement;
 	ClientGame.prototype.canDestroyElement = game.prototype.canDestroyElement;
 
 	ClientGame.prototype.updateData = function (data) {
+		this.started = true; //only needed on first update
 		this.cells = data.cells;
 		this.edges = data.edges;
 		this.corners = data.corners;
