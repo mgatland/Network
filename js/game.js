@@ -1,6 +1,6 @@
 //Clent globals
-var width = 750;
-var height = 750;
+var width = 450;
+var height = 450;
 
 var border = 20;
 
@@ -19,7 +19,6 @@ var port = 80;
 //Client classes
 
 //Client functions
-
 function connect() {
     console.log("connecting to port " + port);
     socket = io.connect("http://" + document.domain + ":" + port);
@@ -35,7 +34,10 @@ function startGame() {
     cell_width = (width - border * 2) / board_width;
 
     global_game = new game();
+}
 
+
+function startGame2d( game ) {
     var canvas = document.getElementById('game');
     ctx = canvas.getContext("2d");
     
@@ -47,7 +49,7 @@ function startGame() {
     document.getElementById("end_turn_button").addEventListener( 'click', endTurnButton );
 
     drawBoard(global_game, ctx);
-    updateStatus( global_game );
+    updateStatus( global_game );  
 }
 
 function endTurnButton( e ) {
