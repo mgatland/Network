@@ -64,9 +64,23 @@
 
             #end_turn_form {
                 position: absolute;
-                top: 90%;
-                left: 5%;
-            }         
+            }      
+
+            input {
+              display: block; 
+              font-size: 25px; 
+              padding: 3px 6px; 
+              background:#ddd;
+              color: black;
+              border: 2px solid #555;
+              border-radius: 5px;
+            }
+
+            input:hover {
+                background: #17A9E8;
+                border-color: #0D5370;
+            }
+
         </style>
         <script id="VertexShader" type="x-shader/x-vertex">
             uniform mat4 world;
@@ -180,7 +194,7 @@
             <input id="end_turn_button" type="button" value="End Turn" />
         </form>
 
-        <div id="build_menu" style="display: none; position: absolute; border: 1px solid; padding: 3px; background-color: white;">
+        <div id="build_menu" style="display: none;">
             <form id="build_menu_form" style="margin: 0px;">
                 <input id="build0" type="button" value="Destroy" name="0" />
                 <input id="build1" type="button" value="Road" name="1" />

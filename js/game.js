@@ -11,13 +11,29 @@ var utility_letter = ['?', 'R', 'W', 'E', 'I'];
 var player_colours = ['blue', 'green'];
 var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
 
-var textColor = 'black';
+var textColour = 'black';
+var lightTextColour = 'white';
+
+var cardWidth = 64;
+var cardHeight = 64;  
+var gapBetweenCards = 16;
 
 var ctx;
 
 var global_game;
 
+var cardsImg = loadImage("/js/cards.png");
+
+//connection data
+
 var port = 80;
+
+function loadImage(name)
+{
+    var image = new Image();
+    image.src = name;
+    return image;
+}
 
 //Client functions
 function connect() {
@@ -81,7 +97,8 @@ function resize(canvas) {
     canvas.height = canvas.clientHeight;
     width = canvas.width;
     height = canvas.height;
-    drawBoard(global_game, ctx);  
+    drawBoard(global_game, ctx); 
+    updateStatus( global_game); 
 }
 
 function startGame2d( game ) {
@@ -231,7 +248,7 @@ function drawBoard(game, ctx) {
                 continue;
 
             if (corner.source.owner === null)
-                ctx.fillStyle = textColor;
+                ctx.fillStyle = textColour;
             else
                 ctx.fillStyle = player_colours[corner.source.owner];
 
@@ -246,7 +263,7 @@ function drawBoard(game, ctx) {
             var cell = game.cells[y][x];
 
             if (cell.level > 1) {
-                ctx.fillStyle = textColor;
+                ctx.fillStyle = textColour;
                 var pos = game_display_3d.gridCoordToPixel(x, y);
                 ctx.fillText( '' + (cell.level -1), pos[0], pos[1] - cell_width * 0.6);
             }
@@ -262,10 +279,71 @@ function drawBoard(game, ctx) {
             }
         }
     }
-   
+
+    drawAllCards(game, ctx);
+
+    //draw current player's points
+    ctx.fillStyle = lightTextColour;
+    ctx.fillText("Points: " + game.players[ game.last_player_index ].points, 32, height - cardHeight - 64);
+
 }
 
+function drawAllCards(game, ctx) {
+    // current player's cards
+    var cardStartX = 32;
+    var cardStartY = height - cardHeight - 32;
+    var offset = cardWidth + gapBetweenCards;
 
+    var current_cards =  game.players[ game.last_player_index ].cards;
+    drawCards(ctx, cardStartX, cardStartY, current_cards, offset);
+
+    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
+    cardStartX = width - cardWidth - gapBetweenCards;
+    drawCards(ctx, cardStartX, cardStartY, next_turn_cards, -offset);
+
+    if (next_turn_cards && next_turn_cards.length > 0) {
+        ctx.fillStyle = lightTextColour;
+        ctx.fillText("Next turn:", cardStartX, cardStartY - 30);
+    }
+
+    //remote player's cards:
+    cardStartX = width - cardWidth - gapBetweenCards;
+    cardStartY = gapBetweenCards;
+
+    var otherPlayer = (game.last_player_index === 0 ? 1 : 0);
+    var otherPlayerCards =  toHiddenCards(game.players[ otherPlayer ].cards);
+    //replace with backwards-facing cards
+    drawCards(ctx, cardStartX, cardStartY, otherPlayerCards, -offset);
+
+    //TODO: Show other player's bonus card too
+
+}
+
+function toHiddenCards(cards) {
+    return Array.apply(null, new Array(cards.length)).map(Number.prototype.valueOf,4); //actually shows Internet card
+}
+
+function drawCards(ctx, startX, startY, cards, offset) {
+    if (!cards || cards.length == 0) 
+        return;
+    for( var card_index = 0; card_index < cards.length; ++card_index ) {
+        var cardType = cards[ card_index ];
+        var cardSrcX = cardWidth * cardType;
+        ctx.drawImage(cardsImg, 
+            cardSrcX, 0,
+            cardWidth, cardHeight,
+            startX + card_index * offset, startY,
+            cardWidth, cardHeight);
+    }
+}
+
+function show(id) {
+    document.getElementById(id).style.display = null;
+}
+
+function hide(id) {
+    document.getElementById(id).style.display = "none";
+}
 
 function relMouseCoords(currentElement, event) {
     var totalOffsetX = 0;
@@ -340,8 +418,10 @@ function updateStatus( game ) {
             status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
         }
 
-        document.getElementById("end_turn_form").style.display = null;
-
+        var endTurnForm = document.getElementById('end_turn_form');
+        endTurnForm.style.display = null;
+        endTurnForm.style.left = "32px";
+        endTurnForm.style.top = (height - 212) + "px";
     } else {
         status_text += "<br>Remote player's turn";
         document.getElementById("end_turn_form").style.display = "none";
@@ -349,7 +429,7 @@ function updateStatus( game ) {
 
     document.getElementById("status").innerHTML = status_text;
 
-    var card_text = 'Current cards: <span class="active_cards">';
+/*    var card_text = 'Current cards: <span class="active_cards">';
     var current_cards =  game.players[ game.last_player_index ].cards;
     for( var card_index = 0; card_index < current_cards.length; ++card_index ) {
         card_text += utility_letter[ current_cards[ card_index ]] + " ";
@@ -359,6 +439,7 @@ function updateStatus( game ) {
     for( var card_index = 0; card_index <  next_turn_cards.length; ++card_index )
         card_text += utility_letter[ next_turn_cards[ card_index ]] + " ";
     document.getElementById("cards").innerHTML = card_text;
+*/
 }
 
 
@@ -377,8 +458,7 @@ function buildButton(e) {
     else
         global_game.buildElement(build_edge_coord, global_game.last_player_index, utility_type );
 
-    var menu_box = document.getElementById("build_menu");
-    menu_box.style.display = "none";
+    hide("build_menu");
 }
 
 
@@ -413,7 +493,9 @@ function onClick(e) {
 
     if (selected_element && selected_element.type == element_type_edge) {
         show_build_menu(selected_element, e, global_game.last_player_index );
+        return;
     }
+    hide("build_menu");
 
     if (selected_element && selected_element.type == element_type_corner) {
         console.log(global_game.corners[selected_element.y][selected_element.x]);
