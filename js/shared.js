@@ -539,6 +539,7 @@
 
 	exports.ClientGame = ClientGame;
 	exports.game = game;
+	exports.find_if = find_if;
 	console.log("Shared code added");
 
 })(typeof exports === 'undefined'? this : exports);

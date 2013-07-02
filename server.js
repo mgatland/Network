@@ -61,7 +61,7 @@ io.sockets.on('connection', function (socket) {
     })
 
     function findWaitingUser() {
-        return users.find_if(function(usr) {
+        return shared.find_if(users, function(usr) {
             return (usr.state === stateWaiting);
         });
     }
