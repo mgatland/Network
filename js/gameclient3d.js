@@ -113,7 +113,7 @@ gridLineModel.prototype.draw = draw;
 function houseModel( gl, height ) {
 	this.gl = gl;
 
-	this.num_indices = 10 * 3;
+
 	this.primitive_type = this.gl.TRIANGLES;
 	this.index_type = this.gl.UNSIGNED_SHORT;
 	this.colour = [ 0.8, 0.8, 0.8, 1.0 ];
@@ -121,36 +121,47 @@ function houseModel( gl, height ) {
 	this.transform = mat4.create( );
 	mat4.identity( this.transform );
 
-	var width_scale = Math.random( ) * 0.1 + 0.04;
+	var width_scale = Math.random( ) * 0.05 + 0.04;
 	var height_scale = height * ( Math.random() * 0.5 + 0.75 );
 
 	var vertices = [
-		-width_scale, -width_scale, 0.0,			0.0, 0.0, 1.0,
-		width_scale, -width_scale, 0.0,				0.0, 0.0, 1.0,
-		width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
-		-width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
+		-width_scale, -width_scale, 0.0,			0.0, -1.0, 0.0,
+		width_scale, -width_scale, 0.0,				0.0, -1.0, 0.0,
+		-width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,
+		width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,
 
+		width_scale, -width_scale, 0.0,				1.0, 0.0, 0.0,
+		width_scale, width_scale, 0.0,				1.0, 0.0, 0.0,
+		width_scale, -width_scale, height_scale,	1.0, 0.0, 0.0,
+		width_scale, width_scale, height_scale,		1.0, 0.0, 0.0,
 
+		width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,
+		-width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,
+		width_scale, width_scale, height_scale,		0.0, 1.0, 0.0,
+		-width_scale, width_scale, height_scale,	0.0, 1.0, 0.0,
 
-		
+		-width_scale, width_scale, 0.0,				-1.0, 0.0, 0.0,
+		-width_scale, -width_scale, 0.0,			-1.0, 0.0, 0.0,
+		-width_scale, width_scale, height_scale,	-1.0, 0.0, 0.0,
+		-width_scale, -width_scale, height_scale,	-1.0, 0.0, 0.0,
+
 		-width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
 		width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
+		-width_scale, width_scale, height_scale,	0.0, 0.0, 1.0,
 		width_scale, width_scale, height_scale,		0.0, 0.0, 1.0,
-		-width_scale, width_scale, height_scale,	0.0, 0.0, 1.0
 	];
 
 	var indices = [
-		0, 1, 5,
-		0, 5 ,4,
-		1, 2, 6,
-		1, 6, 5,
-		2, 3, 7,
-		2, 7, 6,
-		3, 0, 4,
-		3, 4, 7,
-		4, 5, 6,
-		4, 6, 7
+		0, 1, 2,
+		2, 1 ,3,
 	];
+
+	for( var side = 1; side < 5; ++side )
+		for( var i = 0; i < 6; ++i )
+			indices.push( indices[ i ] + 4 * side );
+
+	this.num_indices = indices.length;
+
 
 	this.vertex_buffer = this.gl.createBuffer();
 	this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertex_buffer );
@@ -434,6 +445,8 @@ gameDisplay3d.prototype.renderFrame = function( ) {
 
     this.gl.useProgram( this.shader.shader_program );
     this.gl.uniformMatrix4fv( this.shader.view_proj, false, this.view_proj );
+    var time_float = current_time % 100000 / 1000.0;
+    this.gl.uniform1f( this.shader.time, time_float );
 
     this.board_model.draw( this.shader );
     this.grid_model.draw( this.shader );
@@ -470,4 +483,5 @@ function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
     this.world = gl.getUniformLocation(this.shader_program, "world");
     this.colour = gl.getUniformLocation( this.shader_program, "colour");
     // this.animation_palette = gl.getUniformLocation(this.shader_program, "animation_palette");
+    this.time = gl.getUniformLocation( this.shader_program, "time");
 }
