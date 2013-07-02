@@ -14,6 +14,10 @@ var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
 var textColour = 'black';
 var lightTextColour = 'white';
 
+var cardWidth = 64;
+var cardHeight = 64;  
+var gapBetweenCards = 16;
+
 var ctx;
 
 var global_game;
@@ -276,44 +280,61 @@ function drawBoard(game, ctx) {
         }
     }
 
-    //draw cards
-    var cardWidth = 64;
-    var cardHeight = 64;
+    drawAllCards(game, ctx);
+
+    //draw current player's points
+    ctx.fillStyle = lightTextColour;
+    ctx.fillText("Points: " + game.players[ game.last_player_index ].points, 32, height - cardHeight - 64);
+
+}
+
+function drawAllCards(game, ctx) {
+    // current player's cards
     var cardStartX = 32;
     var cardStartY = height - cardHeight - 32;
-    var gapBetween = 16;
+    var offset = cardWidth + gapBetweenCards;
 
     var current_cards =  game.players[ game.last_player_index ].cards;
-    for( var card_index = 0; card_index < current_cards.length; ++card_index ) {
-        var cardType = current_cards[ card_index ];
+    drawCards(ctx, cardStartX, cardStartY, current_cards, offset);
+
+    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
+    cardStartX = width - cardWidth - gapBetweenCards;
+    drawCards(ctx, cardStartX, cardStartY, next_turn_cards, -offset);
+
+    if (next_turn_cards && next_turn_cards.length > 0) {
+        ctx.fillStyle = lightTextColour;
+        ctx.fillText("Next turn:", cardStartX, cardStartY - 30);
+    }
+
+    //remote player's cards:
+    cardStartX = width - cardWidth - gapBetweenCards;
+    cardStartY = gapBetweenCards;
+
+    var otherPlayer = (game.last_player_index === 0 ? 1 : 0);
+    var otherPlayerCards =  toHiddenCards(game.players[ otherPlayer ].cards);
+    //replace with backwards-facing cards
+    drawCards(ctx, cardStartX, cardStartY, otherPlayerCards, -offset);
+
+    //TODO: Show other player's bonus card too
+
+}
+
+function toHiddenCards(cards) {
+    return Array.apply(null, new Array(cards.length)).map(Number.prototype.valueOf,4); //actually shows Internet card
+}
+
+function drawCards(ctx, startX, startY, cards, offset) {
+    if (!cards || cards.length == 0) 
+        return;
+    for( var card_index = 0; card_index < cards.length; ++card_index ) {
+        var cardType = cards[ card_index ];
         var cardSrcX = cardWidth * cardType;
         ctx.drawImage(cardsImg, 
             cardSrcX, 0,
             cardWidth, cardHeight,
-            cardStartX + card_index * (cardWidth + gapBetween), cardStartY,
+            startX + card_index * offset, startY,
             cardWidth, cardHeight);
     }
-
-    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
-    if (next_turn_cards.length > 0) {
-        cardStartX = width - cardWidth - gapBetween;
-        ctx.fillStyle = textColour;
-        ctx.fillText("Next turn:", cardStartX, cardStartY - 30);
-        for( var card_index = 0; card_index < next_turn_cards.length; ++card_index ) {
-            var cardType = next_turn_cards[ card_index ];
-            var cardSrcX = cardWidth * cardType;
-            ctx.drawImage(cardsImg, 
-                cardSrcX, 0,
-                cardWidth, cardHeight,
-                cardStartX - card_index * (cardWidth + gapBetween), cardStartY,
-                cardWidth, cardHeight);
-        }
-    }
-
-    //draw points
-    ctx.fillStyle = lightTextColour;
-    ctx.fillText("Points: " + game.players[ game.last_player_index ].points, 32, height - cardHeight - 64);
-
 }
 
 function show(id) {
