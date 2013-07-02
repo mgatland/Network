@@ -1,6 +1,6 @@
 
 
-function Obj( url, offset, rotationsZ )
+function Obj( url, offset, rotationsZ, team_colour_mask )
 {
     if( !offset )
         this.offset = [ 0.0, 0.0, 0.0 ];
@@ -11,6 +11,8 @@ function Obj( url, offset, rotationsZ )
         this.rotationsZ = 0;
     else
         this.rotationsZ = rotationsZ;
+
+    this.team_colour_mask = team_colour_mask;
 
     this.vertex_data = null;
     this.index_data = null;
@@ -329,9 +331,10 @@ Obj.prototype.bindBuffer = function( shader )
     gl.enableVertexAttribArray( shader.tangent_attribute );
     gl.vertexAttribPointer( shader.tangent_attribute, 4, gl.FLOAT, false, 48, 24 );
     */
-    gl.enableVertexAttribArray( shader.uv_attribute );
-    gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 );
-    
+    if( shader.uv_attribute ) {
+        gl.enableVertexAttribArray( shader.uv_attribute );
+        gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 );
+    }
     //Bind index buffer
     gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.index_buffer );
 }

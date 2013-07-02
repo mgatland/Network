@@ -17,7 +17,16 @@ function draw( shader ) {
 	this.gl.uniformMatrix4fv( shader.world, false, this.transform );
 
 	//Colour
-	this.gl.uniform4fv( shader.colour, this.colour )
+	this.gl.uniform4fv( shader.colour, this.colour );
+
+	if( shader.team_colour && this.team_colour )
+		this.gl.uniform4fv( shader.team_colour, this.team_colour );
+
+	if( shader.team_colour_mask && this.team_colour_mask ) {
+		this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.team_colour_mask.texture);
+        this.gl.uniform1i(shader.team_colour_mask, 0);
+	}
 
 	//and DRAW
 	this.gl.drawElements( this.primitive_type, this.num_indices, this.index_type, 0 );
@@ -279,7 +288,7 @@ edgeDisplay.prototype.setToType = function( type, player ) {
 
 	this.model = {};
 	this.model.__proto__ = this.edge_models.edge[ type ];
-
+	this.model.team_colour = [ 1.0, 0.0, 0.0, 1.0 ];
 	var translate = mat4.create();
 	mat4.identity( translate );
 	mat4.translate( translate, [ this.x, this.y + ( this.direction ? 1 : 0 ), 0.0 ] );
@@ -321,51 +330,49 @@ function gameDisplay3d( game ) {
     this.edge_models = { 
     	edge: [ 
 	    	null, 
-	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1 ), 
-	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ]), 
-	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ]), 
-	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1),  //Internet
-	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1) //Rubble
+	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
+	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ], 0, this.textures.whiteblack ), 
+	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ], 0, this.textures.whiteblack ), 
+	    	new Obj( "models/utility_internet_edge.obj", [0,4,0], 0, this.textures.whiteblack ),
+	    	new Obj( "models/utility_rubble_edge.obj", [-2,2.5,0], 0, this.textures.whiteblack )
     	],
     };
-
-
 
     this.corner_models = {
     	sources: [
     		null,
-    		new Obj( "models/source_water.obj", [ 0, 1, 0] ),
-    		new Obj( "models/source_water.obj", [ 0, 1, 0] ),
-    		new Obj( "models/source_electricity.obj", [ -1, 1, 0 ] ),
-    		new Obj( "models/source_water.obj", [ 0, 1, 0] )
+    		new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road ),
+    		new Obj( "models/source_water.obj", [ 0, 1, 0], 0, this.textures.whiteblack ),
+    		new Obj( "models/source_electricity.obj", [ -1, 1, 0 ], 0, this.textures.whiteblack ),
+    		new Obj( "models/source_internet.obj", [ 0, 6.2, 0], 0, this.textures.whiteblack )
     	],
     	straight: [
     		null,
-    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1 ), 
-	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ] ),
-	    	new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1),  //Power
-	    	new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1)  //Internet
+    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
+	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ], 0 , this.textures.whiteblack ),
+	    	new Obj( "models/utility_power_straight.obj", [ -1, 5, 0.0], 0, this.textures.road ),
+	    	new Obj( "models/utility_internet_straight.obj", [ 0, 5, 0.0], 0, this.textures.road )
     	],
     	corner: [
     		null,
-    	    new Obj( "models/utility_road_corner.obj"),
-	    	new Obj( "models/utility_water_corner.obj" , [ 0, 2, 0 ], 2 ),
-	    	new Obj( "models/utility_power_corner.obj", [ -1, 2, 0 ], 2 ),
-	    	new Obj( "models/utility_road_corner.obj")  //Internet
+    	    new Obj( "models/utility_road_corner.obj", [0, 0, 0], 0, this.textures.road ),
+	    	new Obj( "models/utility_water_corner.obj" , [ 0, 2, 0 ], 2, this.textures.whiteblack ),
+	    	new Obj( "models/utility_power_corner.obj", [ -1, 2, 0 ], 2, this.textures.whiteblack ),
+	    	new Obj( "models/utility_internet_corner.obj", [ 0, 6.6, 0 ], 2, this.textures.whiteblack )  //Internet
     	],
     	T: [
     		null,
-    	    new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ] ), 
-	    	new Obj( "models/utility_water_T.obj", [ 0, 2.6, 0], 2 ), 
-	    	new Obj( "models/utility_power_T.obj", [ -1, 3, 0 ] ), 
-	    	new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ])  //Internet
+    	    new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ], 0, this.textures.road ), 
+	    	new Obj( "models/utility_water_T.obj", [ 0, 2.6, 0], 2, this.textures.whiteblack ), 
+	    	new Obj( "models/utility_power_T.obj", [ -1, 3, 0 ], 0, this.textures.whiteblack ), 
+	    	new Obj( "models/utility_internet_T.obj", [ 0, 5.4, 0 ], 1, this.textures.whiteblack )
     	],
     	X: [
     		null,
-    	    new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0] ), 
-	    	new Obj( "models/utility_water_X.obj", [ 0.6, 2, 0 ]), 
-	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0] ), 
-	    	new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0])  //Internet
+    	    new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road ), 
+	    	new Obj( "models/utility_water_X.obj", [ 0.6, 2, 0 ], 0, this.textures.whiteblack), 
+	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0], 0, this.textures.whiteblack ), 
+	    	new Obj( "models/utility_internet_X.obj", [ 0, 5.8, 0], 0, this.textures.whiteblack )
     	]    	
     };
 
@@ -438,6 +445,7 @@ gameDisplay3d.prototype.resetContext = function( ) {
     this.gl.enable(this.gl.DEPTH_TEST);
 
     this.shader = new ShaderProgram( this.gl, "VertexShader", "PixelShader");
+    this.team_shader = new ShaderProgram( this.gl, "VertexShader", "PixelShaderWithTeam");
 
     this.board_model = new boardModel( this.gl );
     this.grid_model = new gridLineModel( this.gl );
@@ -517,6 +525,7 @@ gameDisplay3d.prototype.lostContext = function( ) {
 	this.grid_model = null;
 	this.board_model = null;
 	this.shader = null;
+	this.team_shader = null;
 	this.gl = null;
 }
 
@@ -612,6 +621,8 @@ gameDisplay3d.prototype.renderFrame = function( ) {
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
+
+    //Draw non-team elements
     this.gl.useProgram( this.shader.shader_program );
     this.gl.uniformMatrix4fv( this.shader.view_proj, false, this.view_proj );
     var time_float = current_time % 100000 / 1000.0;
@@ -626,13 +637,17 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     	}
     }
 
+    //Draw team elements
+  	this.gl.useProgram( this.team_shader.shader_program );
+  	this.gl.uniform1f( this.team_shader.time, time_float );
+	this.gl.uniformMatrix4fv( this.team_shader.view_proj, false, this.view_proj );
 
     for (var i = 0; i < 2; ++i) {
         var height = board_height + (i == 0 ? 1 : 0);
         for (var y = 0; y < height; ++y) {
             var width = board_width + (i == 0 ? 0 : 1);
             for (var x = 0; x < width; ++x) {
-                this.edge_displays[i][y][x].draw( this.shader );
+                this.edge_displays[i][y][x].draw( this.team_shader );
             }
         }
     }
@@ -650,7 +665,7 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     			continue;
     		}
     		if( i == self.x && sub.loaded ) {
-    			sub.draw( self.shader );
+    			sub.draw( self.team_shader );
 			}
     		++i;
     	}
@@ -679,9 +694,11 @@ function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
     // this.blend_weights_attribute = gl.getAttribLocation(this.shader_program, "blend_weights");
     // this.colour_map = gl.getUniformLocation(this.shader_program, "colour_map");
     // this.normal_map = gl.getUniformLocation(this.shader_program, "normal_map");
+    this.team_colour_mask = gl.getUniformLocation( this.shader_program, "team_colour_mask");
     this.view_proj = gl.getUniformLocation( this.shader_program, "view_proj" );
     this.world = gl.getUniformLocation(this.shader_program, "world");
     this.colour = gl.getUniformLocation( this.shader_program, "colour");
+    this.team_colour = gl.getUniformLocation( this.shader_program, "team_colour");
     // this.animation_palette = gl.getUniformLocation(this.shader_program, "animation_palette");
     this.time = gl.getUniformLocation( this.shader_program, "time");
 }
