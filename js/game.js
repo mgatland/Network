@@ -11,13 +11,24 @@ var utility_letter = ['?', 'R', 'W', 'E', 'I'];
 var player_colours = ['blue', 'green'];
 var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
 
-var textColor = 'black';
+var textColour = 'black';
 
 var ctx;
 
 var global_game;
 
+var cardsImg = loadImage("/js/cards.png");
+
+//connection data
+
 var port = 80;
+
+function loadImage(name)
+{
+    var image = new Image();
+    image.src = name;
+    return image;
+}
 
 //Client functions
 function connect() {
@@ -231,7 +242,7 @@ function drawBoard(game, ctx) {
                 continue;
 
             if (corner.source.owner === null)
-                ctx.fillStyle = textColor;
+                ctx.fillStyle = textColour;
             else
                 ctx.fillStyle = player_colours[corner.source.owner];
 
@@ -246,7 +257,7 @@ function drawBoard(game, ctx) {
             var cell = game.cells[y][x];
 
             if (cell.level > 1) {
-                ctx.fillStyle = textColor;
+                ctx.fillStyle = textColour;
                 var pos = game_display_3d.gridCoordToPixel(x, y);
                 ctx.fillText( '' + (cell.level -1), pos[0], pos[1] - cell_width * 0.6);
             }
@@ -263,9 +274,51 @@ function drawBoard(game, ctx) {
         }
     }
    
+
+
+    //draw cards
+    var cardWidth = 64;
+    var cardHeight = 64;
+    var cardStartX = 32;
+    var cardStartY = height - cardHeight - 32;
+    var gapBetween = 16;
+
+    var current_cards =  game.players[ game.last_player_index ].cards;
+    for( var card_index = 0; card_index < current_cards.length; ++card_index ) {
+        var cardType = current_cards[ card_index ];
+        var cardSrcX = cardWidth * cardType;
+        ctx.drawImage(cardsImg, 
+            cardSrcX, 0,
+            cardWidth, cardHeight,
+            cardStartX + card_index * (cardWidth + gapBetween), cardStartY,
+            cardWidth, cardHeight);
+    }
+
+    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
+    if (next_turn_cards.length > 0) {
+        cardStartX = width - cardWidth - gapBetween;
+        ctx.fillStyle = textColour;
+        ctx.fillText("Next turn:", cardStartX, cardStartY - 30);
+        for( var card_index = 0; card_index < next_turn_cards.length; ++card_index ) {
+            var cardType = next_turn_cards[ card_index ];
+            var cardSrcX = cardWidth * cardType;
+            ctx.drawImage(cardsImg, 
+                cardSrcX, 0,
+                cardWidth, cardHeight,
+                cardStartX - card_index * (cardWidth + gapBetween), cardStartY,
+                cardWidth, cardHeight);
+        }
+    }
 }
 
+//unused
+function show(id) {
+    document.getElementById(id).style.display = null;
+}
 
+function hide(id) {
+    document.getElementById(id).style.display = "none";
+}
 
 function relMouseCoords(currentElement, event) {
     var totalOffsetX = 0;
@@ -349,7 +402,7 @@ function updateStatus( game ) {
 
     document.getElementById("status").innerHTML = status_text;
 
-    var card_text = 'Current cards: <span class="active_cards">';
+/*    var card_text = 'Current cards: <span class="active_cards">';
     var current_cards =  game.players[ game.last_player_index ].cards;
     for( var card_index = 0; card_index < current_cards.length; ++card_index ) {
         card_text += utility_letter[ current_cards[ card_index ]] + " ";
@@ -359,6 +412,7 @@ function updateStatus( game ) {
     for( var card_index = 0; card_index <  next_turn_cards.length; ++card_index )
         card_text += utility_letter[ next_turn_cards[ card_index ]] + " ";
     document.getElementById("cards").innerHTML = card_text;
+*/
 }
 
 
