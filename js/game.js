@@ -12,6 +12,7 @@ var player_colours = ['blue', 'green'];
 var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
 
 var textColour = 'black';
+var lightTextColour = 'white';
 
 var ctx;
 
@@ -92,7 +93,8 @@ function resize(canvas) {
     canvas.height = canvas.clientHeight;
     width = canvas.width;
     height = canvas.height;
-    drawBoard(global_game, ctx);  
+    drawBoard(global_game, ctx); 
+    updateStatus( global_game); 
 }
 
 function startGame2d( game ) {
@@ -273,8 +275,6 @@ function drawBoard(game, ctx) {
             }
         }
     }
-   
-
 
     //draw cards
     var cardWidth = 64;
@@ -309,9 +309,13 @@ function drawBoard(game, ctx) {
                 cardWidth, cardHeight);
         }
     }
+
+    //draw points
+    ctx.fillStyle = lightTextColour;
+    ctx.fillText("Points: " + game.players[ game.last_player_index ].points, 32, height - cardHeight - 64);
+
 }
 
-//unused
 function show(id) {
     document.getElementById(id).style.display = null;
 }
@@ -393,8 +397,10 @@ function updateStatus( game ) {
             status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
         }
 
-        document.getElementById("end_turn_form").style.display = null;
-
+        var endTurnForm = document.getElementById('end_turn_form');
+        endTurnForm.style.display = null;
+        endTurnForm.style.left = "32px";
+        endTurnForm.style.top = (height - 212) + "px";
     } else {
         status_text += "<br>Remote player's turn";
         document.getElementById("end_turn_form").style.display = "none";
@@ -431,8 +437,7 @@ function buildButton(e) {
     else
         global_game.buildElement(build_edge_coord, global_game.last_player_index, utility_type );
 
-    var menu_box = document.getElementById("build_menu");
-    menu_box.style.display = "none";
+    hide("build_menu");
 }
 
 
@@ -467,7 +472,9 @@ function onClick(e) {
 
     if (selected_element && selected_element.type == element_type_edge) {
         show_build_menu(selected_element, e, global_game.last_player_index );
+        return;
     }
+    hide("build_menu");
 
     if (selected_element && selected_element.type == element_type_corner) {
         console.log(global_game.corners[selected_element.y][selected_element.x]);
