@@ -257,6 +257,46 @@ cellDisplay.prototype.frameMove = function( elapsed_time ) {
 	}
 }
 
+function edgeDisplay( game, edge_models, direction, x, y ) {
+	this.game = game;
+	this.edge_models = edge_models;
+	this.direction = direction;
+	this.x = x;
+	this.y = y;
+	this.model = null;
+
+	var edge = game.edges[ direction ][ y ][ x ];
+	this.setToType( edge.type, edge.player );
+}
+
+edgeDisplay.prototype.setToType = function( type, player ) {
+	this.type = type;
+	this.player = player;
+
+	this.model = null;
+	if( this.type === null )
+		return;
+
+	this.model = {};
+	this.model.__proto__ = this.edge_models.straight[ edge.type ];
+	this.model.transform = mat4.create();
+
+	mat4.translate( this.edge_models.straight[ edge.type ].transform, [ x, y, 0.0 ], this.model.transform );
+}
+
+edgeDisplay.prototype.frameMove = function( elapsed_time ) {
+	var edge = game.edges[ direction ][ y ][ x ];
+	if( edge.type !== type || edge.player !== player )
+		setToType( edge.type, edge.player );
+}
+
+edgeDisplay.prototype.draw = function( shader ) {
+	if( !this.model )
+		return;
+
+	this.model.draw( shader );
+}
+
 function gameDisplay3d( game ) {
 	this.game = game;
 	this.canvas = document.getElementById( "game3d");
@@ -267,6 +307,15 @@ function gameDisplay3d( game ) {
     mat4.identity( this.rotation_matrix );
 
     this.bulldozer = new Obj( "js/Bulldozer.obj");
+    this.edge_models = { };
+    this.edge_models.straight = [ 
+    	null, 
+    	new Obj( "js/Bulldozer.obj"), 
+    	new Obj( "js/Bulldozer.obj"), 
+    	new Obj( "js/Bulldozer.obj"), 
+    	new Obj( "js/Bulldozer.obj"), 
+    	new Obj( "js/Bulldozer.obj") 
+    ];
 
 	var self = this;
 	var cell_displays = null;
@@ -347,6 +396,10 @@ gameDisplay3d.prototype.resetContext = function( ) {
     	[ new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ) ]
     ];
 
+    for( var i = 0; i < this.edge_models.straight.length; ++i )
+    	if( this.edge_models.straight[ i ] )
+    		this.edge_models.straight[ i ].resetContext( this.gl ); 
+
     this.cell_displays = new Array( board_height );
     for( var y = 0; y < board_height; ++y ) {
     	this.cell_displays[ y ] = new Array( board_width );
@@ -355,11 +408,31 @@ gameDisplay3d.prototype.resetContext = function( ) {
     	}
     }
 
+	this.edge_displays = [[],[]];
+    for (var i = 0; i < 2; ++i) {
+        var height = board_height + (i == 0 ? 1 : 0);
+        this.edge_displays[i] = new Array(height);
+        for (var y = 0; y < height; ++y) {
+            var width = board_width + (i == 0 ? 0 : 1);
+            this.edge_displays[i][y] = new Array(width);
+            for (var x = 0; x < width; ++x) {
+                this.edge_displays[i][y][x] = new edgeDisplay( this.game, this.edge_models, i, x, y );
+            }
+        }
+    }
+
     this.bulldozer.resetContext( this.gl );
 }
 
 gameDisplay3d.prototype.lostContext = function( ) {
+
+	for( var i = 0; i < this.edge_models.straight.length; ++i )
+		if( this.edge_models.straight[ i ] )
+    		this.edge_models.straight[ i ].lostContext(  );
 	this.bulldozer.lostContext( );
+
+    this.cell_displays = null;
+    this.edge_displays = null;
 	this.house_models = null;
 	this.grid_model = null;
 	this.board_model = null;
@@ -413,6 +486,9 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     		this.cell_displays[ y ][ x ].frameMove( elapsed_time );
     	}
     }
+
+//    for( var direction = 0; direction < 2; ++direction )
+//    	for( var y = 0; y < )
 
     //Handle window size change
     if (this.canvas.clientWidth != this.canvas.width || this.canvas.clientHeight != this.height)

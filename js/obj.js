@@ -294,7 +294,7 @@ Obj.prototype.resetContext = function ( gl ) {
     mat4.identity( this.transform );
 
     mat4.rotateX( this.transform, Math.PI / 2 );
-    mat4.scale( this.transform, [ 0.2, 0.2, 0.2 ] );
+    mat4.scale( this.transform, [ 0.06, 0.06, 0.06 ] );
 
 };
 
@@ -313,10 +313,11 @@ Obj.prototype.bindBuffer = function( shader )
     gl.vertexAttribPointer( shader.position_attribute, 3, gl.FLOAT, false, 48, 0 );
     gl.enableVertexAttribArray( shader.normal_attribute );
     gl.vertexAttribPointer( shader.normal_attribute, 3, gl.FLOAT, false, 48, 12 );
+    /*
     gl.enableVertexAttribArray( shader.tangent_attribute );
     gl.vertexAttribPointer( shader.tangent_attribute, 4, gl.FLOAT, false, 48, 24 );
     gl.enableVertexAttribArray( shader.uv_attribute );
-    gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 );
+    gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 ); */
     
     //Bind index buffer
     gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.index_buffer );
