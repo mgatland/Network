@@ -266,6 +266,8 @@ function gameDisplay3d( game ) {
     this.rotation_matrix = mat4.create();
     mat4.identity( this.rotation_matrix );
 
+    this.bulldozer = new Obj( "js/Bulldozer.obj");
+
 	var self = this;
 	var cell_displays = null;
 
@@ -353,9 +355,12 @@ gameDisplay3d.prototype.resetContext = function( ) {
     		this.cell_displays[ y ][ x ] = new cellDisplay( this.game, this.house_models, x, y );
     	}
     }
+
+    this.bulldozer.resetContext( this.gl );
 }
 
 gameDisplay3d.prototype.lostContext = function( ) {
+	this.bulldozer.lostContext( );
 	this.house_models = null;
 	this.grid_model = null;
 	this.board_model = null;
@@ -458,6 +463,9 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     		this.cell_displays[ y ][ x ].draw( this.shader );
     	}
     }
+
+    if( this.bulldozer.loaded )
+    	this.bulldozer.draw( this.shader );
 
 }
 

@@ -310,7 +310,7 @@
 	                if (cell.supplied[type] == null) {
 	                    corner_coords.forEach(function (corner_coord) {
 	                        var corner = self.corners[corner_coord.y][corner_coord.x];
-	                        var found_supply = corner.supplies.find_if(function (s) { return s.type == type; });
+	                        var found_supply = find_if(corner.supplies, function (s) { return s.type == type; });
 	                        if (found_supply !== undefined)
 	                            cell.supplied[type] = found_supply.owner;
 	                    });
@@ -413,7 +413,7 @@
 	    //Special case when placing roads
 	    //Claim any unclaimed road sources
 	    if( element_type == utility_type_road ) {
-	        var found_source = getAdjacentCornersToEdge( edge_coord ).find_if( function( corner_coord ) { 
+	        var found_source = find_if( getAdjacentCornersToEdge( edge_coord ), function( corner_coord ) { 
 	            var corner = self.corners[ corner_coord.y ][ corner_coord.x ];
 	            return corner.source && corner.source.type === utility_type_road && corner.source.owner === null;
 	        } );
@@ -445,10 +445,10 @@
 
 	//Shared functions
 
-	Array.prototype.find_if = function (f) {
-	    for( var i = 0; i < this.length; ++i )
-	        if( f( this[ i ] ) )
-	            return this[ i ];
+	function find_if( array, f ) {
+	    for( var i = 0; i < array.length; ++i )
+	        if( f( array[ i ] ) )
+	            return array[ i ];
 	    return undefined;
 	}
 
