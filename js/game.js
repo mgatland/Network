@@ -11,6 +11,8 @@ var utility_letter = ['?', 'R', 'W', 'E', 'I'];
 var player_colours = ['blue', 'green'];
 var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
 
+var textColor = 'black';
+
 var ctx;
 
 var global_game;
@@ -125,7 +127,7 @@ function drawline(ctx, x1, y1, x2, y2, colour, width, dash ) {
 function drawHighlight( ctx, edge_coord ) {
     var colour = 'rgb( 210, 255, 255 )';
     var dash = null;
-    var line_width = 20;
+    var line_width = 2;
 
     var start = game_display_3d.gridCoordToPixel(edge_coord.x, edge_coord.y);
 
@@ -169,6 +171,7 @@ function drawEdge(ctx, edge_coord, edge ) {
 
 function drawBoard(game, ctx) {
     ctx.clearRect (0, 0, width, height);
+    ctx.font = '17px Calibri';
 
     //TODO: draw generators
     /*for (var y = 0; y < board_height; ++y)
@@ -183,7 +186,6 @@ function drawBoard(game, ctx) {
         var t1 = window.game_display_3d.gridCoordToPixel(0, 0);
         var t2 = window.game_display_3d.gridCoordToPixel(1, 1);
         var cell_width = Math.abs(t1[1] - t2[1]);
-        console.log("cell width: " + cell_width);
     }
 
     //Draw "can move" highlights
@@ -229,7 +231,7 @@ function drawBoard(game, ctx) {
                 continue;
 
             if (corner.source.owner === null)
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = textColor;
             else
                 ctx.fillStyle = player_colours[corner.source.owner];
 
@@ -244,7 +246,7 @@ function drawBoard(game, ctx) {
             var cell = game.cells[y][x];
 
             if (cell.level > 1) {
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = textColor;
                 var pos = game_display_3d.gridCoordToPixel(x, y);
                 ctx.fillText( '' + (cell.level -1), pos[0], pos[1] - cell_width * 0.6);
             }
