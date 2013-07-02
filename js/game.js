@@ -280,24 +280,26 @@ function drawBoard(game, ctx) {
         }
     }
 
-    drawAllCards(game, ctx);
-
-    //draw current player's points
-    ctx.fillStyle = lightTextColour;
-    ctx.fillText("Points: " + game.players[ game.last_player_index ].points, 32, height - cardHeight - 64);
-
+    drawPlayerHUD(game, ctx);
 }
 
-function drawAllCards(game, ctx) {
+function drawPlayerHUD(game, ctx) {
+
+    if (localPlayers.length === 1) {
+        var currentPlayer = localPlayers[0];
+    } else {
+        currentPlayer = game.last_player_index;
+    }
+
     // current player's cards
     var cardStartX = 32;
     var cardStartY = height - cardHeight - 32;
     var offset = cardWidth + gapBetweenCards;
 
-    var current_cards =  game.players[ game.last_player_index ].cards;
+    var current_cards =  game.players[ currentPlayer ].cards;
     drawCards(ctx, cardStartX, cardStartY, current_cards, offset);
 
-    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
+    var next_turn_cards = game.players[ currentPlayer ].next_turn_bonus_cards;
     cardStartX = width - cardWidth - gapBetweenCards;
     drawCards(ctx, cardStartX, cardStartY, next_turn_cards, -offset);
 
@@ -306,17 +308,23 @@ function drawAllCards(game, ctx) {
         ctx.fillText("Next turn:", cardStartX, cardStartY - 30);
     }
 
-    //remote player's cards:
+    //other player's cards:
     cardStartX = width - cardWidth - gapBetweenCards;
     cardStartY = gapBetweenCards;
 
-    var otherPlayer = (game.last_player_index === 0 ? 1 : 0);
+    var otherPlayer = getOtherPlayer(currentPlayer);
     var otherPlayerCards =  toHiddenCards(game.players[ otherPlayer ].cards);
-    //replace with backwards-facing cards
+    //hide the values of the other player's cards
     drawCards(ctx, cardStartX, cardStartY, otherPlayerCards, -offset);
 
-    //TODO: Show other player's bonus card too
+    //draw points
+    ctx.fillStyle = lightTextColour;
+    ctx.fillText("Points: " + game.players[ currentPlayer ].points, 32, height - cardHeight - 64);
+    ctx.fillText("Points: " + game.players[ otherPlayer ].points, width - 100, 0 + cardHeight + 64);
+}
 
+function getOtherPlayer(currentPlayer) {
+    return (currentPlayer === 0 ? 1 : 0);
 }
 
 function toHiddenCards(cards) {
@@ -404,42 +412,22 @@ function updateStatus( game ) {
 
     if (!game.started) return;
 
-    for( var player_index = 0; player_index < game.players.length; ++player_index ) {
-        status_text += "Player " +( player_index + 1) + ": " + game.players[ player_index ].points + " ";
-    }
-
-
-    var myTurn = isMyTurn( game );
-
-    if (myTurn) {
+    if (isMyTurn( game )) {
         if (localPlayers.length == 1) {
-            status_text += '<br>Your turn'
+            status_text = 'Your turn'
         } else {
-            status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
+            status_text = 'Player ' + ( game.last_player_index + 1 ) + ' turn'
         }
-
         var endTurnForm = document.getElementById('end_turn_form');
         endTurnForm.style.display = null;
         endTurnForm.style.left = "32px";
         endTurnForm.style.top = (height - 212) + "px";
     } else {
-        status_text += "<br>Remote player's turn";
+        status_text += "Other player's turn...";
         document.getElementById("end_turn_form").style.display = "none";
     }
 
     document.getElementById("status").innerHTML = status_text;
-
-/*    var card_text = 'Current cards: <span class="active_cards">';
-    var current_cards =  game.players[ game.last_player_index ].cards;
-    for( var card_index = 0; card_index < current_cards.length; ++card_index ) {
-        card_text += utility_letter[ current_cards[ card_index ]] + " ";
-    }
-    card_text += '</span><span class="bonus_cards">'
-    var next_turn_cards = game.players[ game.last_player_index ].next_turn_bonus_cards;
-    for( var card_index = 0; card_index <  next_turn_cards.length; ++card_index )
-        card_text += utility_letter[ next_turn_cards[ card_index ]] + " ";
-    document.getElementById("cards").innerHTML = card_text;
-*/
 }
 
 
