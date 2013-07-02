@@ -1,7 +1,17 @@
 
 
-function Obj( url )
+function Obj( url, offset, rotationsZ )
 {
+    if( !offset )
+        this.offset = [ 0.0, 0.0, 0.0 ];
+    else
+        this.offset = offset;
+
+    if( !rotationsZ )
+        this.rotationsZ = 0;
+    else
+        this.rotationsZ = rotationsZ;
+
     this.vertex_data = null;
     this.index_data = null;
     this.loaded = false;
@@ -293,9 +303,11 @@ Obj.prototype.resetContext = function ( gl ) {
     this.transform = mat4.create();
     mat4.identity( this.transform );
 
-    mat4.rotateX( this.transform, Math.PI / 2 );
-    mat4.scale( this.transform, [ 0.06, 0.06, 0.06 ] );
+    mat4.rotateZ( this.transform, ( Math.PI / 2 ) * this.rotationsZ );
+    mat4.translate( this.transform, this.offset );   
+    mat4.rotateX( this.transform, Math.PI / 2 ); 
 
+    console.log( "Reset " + this.url );
 };
 
 Obj.prototype.lostContext = function( ) {
@@ -316,8 +328,9 @@ Obj.prototype.bindBuffer = function( shader )
     /*
     gl.enableVertexAttribArray( shader.tangent_attribute );
     gl.vertexAttribPointer( shader.tangent_attribute, 4, gl.FLOAT, false, 48, 24 );
+    */
     gl.enableVertexAttribArray( shader.uv_attribute );
-    gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 ); */
+    gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 );
     
     //Bind index buffer
     gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.index_buffer );

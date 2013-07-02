@@ -7,6 +7,7 @@
         <script src="./socket.io/socket.io.js"></script>
         <script src="js/gameclient3d.js" type="text/javascript"></script>
         <script src="js/obj.js" type="text/javascript"></script>
+        <script src="js/texture.js" type="text/javascript"></script>
         <style>
             body, html {
                 width: 100%;
@@ -76,9 +77,9 @@
             attribute vec3 local_position;
             attribute vec3 local_normal;
             //attribute vec4 local_tangent;
-            //attribute vec2 local_uv;
+            attribute vec2 local_uv;
             
-            //varying vec2 uv;
+            varying vec2 uv;
             //varying vec3 tangent_light_direction;
             //varying vec4 colour;
 
@@ -96,8 +97,27 @@
                 light = dot( light_direction, world_normal );
                 //tangent_light_direction.xyz = vec3( dot( world_tangent, light_direction ), dot( world_binormal, light_direction ), dot( world_normal, light_direction ) );
 
+                uv = local_uv;
                 gl_Position = view_proj * world_position;
-                //uv = local_uv;
+            }
+        </script>
+        <script id="PixelShaderWithTeam" type="x-shader/x-fragment">
+            precision mediump float;
+
+            varying float light;
+            varying vec2 uv;
+
+            uniform vec4 colour;
+            uniform vec4 team_colour;
+
+            uniform sampler2D team_colour_mask;
+
+            void main()
+            {
+                float team_mask = texture2D( team_colour_mask, uv ).r;
+                vec4 result_colour = colour + ( team_colour - colour ) * team_mask;
+ 
+                gl_FragColor = vec4( result_colour.xyz * light, 1.0 );
             }
         </script>
         <script id="PixelShader" type="x-shader/x-fragment">

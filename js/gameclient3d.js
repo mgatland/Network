@@ -278,16 +278,21 @@ edgeDisplay.prototype.setToType = function( type, player ) {
 		return;
 
 	this.model = {};
-	this.model.__proto__ = this.edge_models.straight[ edge.type ];
-	this.model.transform = mat4.create();
+	this.model.__proto__ = this.edge_models.edge[ type ];
 
-	mat4.translate( this.edge_models.straight[ edge.type ].transform, [ x, y, 0.0 ], this.model.transform );
+	var translate = mat4.create();
+	mat4.identity( translate );
+	mat4.translate( translate, [ this.x, this.y + ( this.direction ? 1 : 0 ), 0.0 ] );
+	if( !this.direction )
+		mat4.rotateZ( translate, Math.PI / 2 );
+	this.model.transform = mat4.create();
+	mat4.multiply( translate, this.edge_models.edge[ type ].transform, this.model.transform );
 }
 
 edgeDisplay.prototype.frameMove = function( elapsed_time ) {
-	var edge = game.edges[ direction ][ y ][ x ];
-	if( edge.type !== type || edge.player !== player )
-		setToType( edge.type, edge.player );
+	var edge = this.game.edges[ this.direction ][ this.y ][ this.x ];
+	if( edge.type !== this.type || edge.player !== this.player )
+		this.setToType( edge.type, edge.player );
 }
 
 edgeDisplay.prototype.draw = function( shader ) {
@@ -298,6 +303,7 @@ edgeDisplay.prototype.draw = function( shader ) {
 }
 
 function gameDisplay3d( game ) {
+	this.x = 0;
 	this.game = game;
 	this.canvas = document.getElementById( "game3d");
 	this.last_time = new Date().getTime();
@@ -306,16 +312,62 @@ function gameDisplay3d( game ) {
     this.rotation_matrix = mat4.create();
     mat4.identity( this.rotation_matrix );
 
+    this.textures = { 
+    	whiteblack: new Texture( "models/whiteblack.png" ),
+    	road: new Texture( "models/road.png")
+    };
+
     this.bulldozer = new Obj( "js/Bulldozer.obj");
-    this.edge_models = { };
-    this.edge_models.straight = [ 
-    	null, 
-    	new Obj( "js/Bulldozer.obj"), 
-    	new Obj( "js/Bulldozer.obj"), 
-    	new Obj( "js/Bulldozer.obj"), 
-    	new Obj( "js/Bulldozer.obj"), 
-    	new Obj( "js/Bulldozer.obj") 
-    ];
+    this.edge_models = { 
+    	edge: [ 
+	    	null, 
+	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1 ), 
+	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ]), 
+	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ]), 
+	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1),  //Internet
+	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1) //Rubble
+    	],
+    };
+
+
+
+    this.corner_models = {
+    	sources: [
+    		null,
+    		new Obj( "models/source_water.obj", [ 0, 1, 0] ),
+    		new Obj( "models/source_water.obj", [ 0, 1, 0] ),
+    		new Obj( "models/source_electricity.obj", [ -1, 1, 0 ] ),
+    		new Obj( "models/source_water.obj", [ 0, 1, 0] )
+    	],
+    	straight: [
+    		null,
+    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1 ), 
+	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ] ),
+	    	new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1),  //Power
+	    	new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1)  //Internet
+    	],
+    	corner: [
+    		null,
+    	    new Obj( "models/utility_road_corner.obj"),
+	    	new Obj( "models/utility_water_corner.obj" , [ 0, 2, 0 ], 2 ),
+	    	new Obj( "models/utility_power_corner.obj", [ -1, 2, 0 ], 2 ),
+	    	new Obj( "models/utility_road_corner.obj")  //Internet
+    	],
+    	T: [
+    		null,
+    	    new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ] ), 
+	    	new Obj( "models/utility_water_T.obj", [ 0, 2.6, 0], 2 ), 
+	    	new Obj( "models/utility_power_T.obj", [ -1, 3, 0 ] ), 
+	    	new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ])  //Internet
+    	],
+    	X: [
+    		null,
+    	    new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0] ), 
+	    	new Obj( "models/utility_water_X.obj", [ 0.6, 2, 0 ]), 
+	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0] ), 
+	    	new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0])  //Internet
+    	]    	
+    };
 
 	var self = this;
 	var cell_displays = null;
@@ -396,9 +448,23 @@ gameDisplay3d.prototype.resetContext = function( ) {
     	[ new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ) ]
     ];
 
-    for( var i = 0; i < this.edge_models.straight.length; ++i )
-    	if( this.edge_models.straight[ i ] )
-    		this.edge_models.straight[ i ].resetContext( this.gl ); 
+    var self = this;
+    function resetContextOnAll( models ) {
+    	for( key in models ) {
+    		var sub = models[ key ];
+    		if( !sub )
+    			continue;
+    		if( sub instanceof Array ) {
+    			resetContextOnAll( sub );
+    			continue;
+    		}
+    		sub.resetContext( self.gl );
+    	}
+    }
+
+    resetContextOnAll( this.edge_models );
+    resetContextOnAll( this.corner_models );
+    resetContextOnAll( this.textures );
 
     this.cell_displays = new Array( board_height );
     for( var y = 0; y < board_height; ++y ) {
@@ -426,9 +492,23 @@ gameDisplay3d.prototype.resetContext = function( ) {
 
 gameDisplay3d.prototype.lostContext = function( ) {
 
-	for( var i = 0; i < this.edge_models.straight.length; ++i )
-		if( this.edge_models.straight[ i ] )
-    		this.edge_models.straight[ i ].lostContext(  );
+    function lostContextOnAll( models ) {
+    	for( key in models ) {
+    		var sub = models[ key ];
+    		if( !sub )
+    			continue;
+    		if( sub instanceof Array ) {
+    			lostContextOnAll( sub );
+    			continue;
+    		}
+    		sub.lostContext( self.gl );
+    	}
+    }
+
+    lostContextOnAll( this.edge_models );
+    lostContextOnAll( this.corner_models );
+    lostContextOnAll( this.textures );
+
 	this.bulldozer.lostContext( );
 
     this.cell_displays = null;
@@ -472,7 +552,7 @@ gameDisplay3d.prototype.pixelToGridCoord = function( x, y ) {
 }
 
 gameDisplay3d.prototype.renderFrame = function( ) {
-
+	var self = this;
 	//this.board_model.colour = rgbStringToArray( document.getElementById( "board").style.color );
 
 
@@ -487,8 +567,16 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     	}
     }
 
-//    for( var direction = 0; direction < 2; ++direction )
-//    	for( var y = 0; y < )
+    for (var i = 0; i < 2; ++i) {
+        var height = board_height + (i == 0 ? 1 : 0);
+        for (var y = 0; y < height; ++y) {
+            var width = board_width + (i == 0 ? 0 : 1);
+            for (var x = 0; x < width; ++x) {
+                this.edge_displays[i][y][x].frameMove( elapsed_time );
+            }
+        }
+    }
+
 
     //Handle window size change
     if (this.canvas.clientWidth != this.canvas.width || this.canvas.clientHeight != this.height)
@@ -538,9 +626,37 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     	}
     }
 
-    if( this.bulldozer.loaded )
-    	this.bulldozer.draw( this.shader );
 
+    for (var i = 0; i < 2; ++i) {
+        var height = board_height + (i == 0 ? 1 : 0);
+        for (var y = 0; y < height; ++y) {
+            var width = board_width + (i == 0 ? 0 : 1);
+            for (var x = 0; x < width; ++x) {
+                this.edge_displays[i][y][x].draw( this.shader );
+            }
+        }
+    }
+
+
+
+    var i = 0;
+    function renderX( models ) {
+    	for( key in models ) {
+    		var sub = models[ key ];
+    		if( !sub )
+    			continue;
+    		if( sub instanceof Array ) {
+    			renderX( sub );
+    			continue;
+    		}
+    		if( i == self.x && sub.loaded ) {
+    			sub.draw( self.shader );
+			}
+    		++i;
+    	}
+    }
+
+    renderX( this.corner_models );
 }
 
 function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
@@ -556,7 +672,7 @@ function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
     }
 
     this.position_attribute = gl.getAttribLocation(this.shader_program, "local_position");
-    // this.uv_attribute = gl.getAttribLocation(this.shader_program, "local_uv");
+    this.uv_attribute = gl.getAttribLocation(this.shader_program, "local_uv");
     this.normal_attribute = gl.getAttribLocation(this.shader_program, "local_normal");
     // this.tangent_attribute = gl.getAttribLocation(this.shader_program, "local_tangent");
     // this.bone_indices_attribute = gl.getAttribLocation(this.shader_program, "bone_indices");
