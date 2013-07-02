@@ -7,11 +7,11 @@ var height = 450;
 
 var border = 20;
 
-var cell_width; //must be initialised after shared file has loaded
-
 var utility_letter = ['?', 'R', 'W', 'E', 'I'];
 var player_colours = ['blue', 'green'];
 var utility_type_dashes = [null, null, [1], [10, 5], [5, 5], [2]];
+
+var textColor = 'black';
 
 var ctx;
 
@@ -59,8 +59,6 @@ function startGame() {
 
     connect();
 
-    cell_width = (width - border * 2) / board_width;
-
     global_game = new ClientGame();
 
     var networkOptionsForm = document.getElementById('network_options_form');
@@ -75,6 +73,15 @@ function startGame() {
         socket.emit('startNetworkGame');
         networkOptionsForm.style.display = "none";
     });
+
+}
+
+function resize(canvas) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    width = canvas.width;
+    height = canvas.height;
+    drawBoard(global_game, ctx);  
 }
 
 function startGame2d( game ) {
@@ -88,11 +95,19 @@ function startGame2d( game ) {
 
     document.getElementById("end_turn_button").addEventListener( 'click', endTurnButton );
 
-    drawBoard(global_game, ctx);
+    window.addEventListener('resize', function () {
+        resize(canvas);
+    });
+
+    resize(canvas);
     updateStatus( global_game );  
 }
 
 function endTurnButton( e ) {
+
+    var menu_box = document.getElementById("build_menu");
+    menu_box.style.display = "none";
+
     global_game.nextPlayerTurn();
     updateStatus( global_game );
     drawBoard( global_game, ctx );
@@ -112,21 +127,17 @@ function drawline(ctx, x1, y1, x2, y2, colour, width, dash ) {
 function drawHighlight( ctx, edge_coord ) {
     var colour = 'rgb( 210, 255, 255 )';
     var dash = null;
-    var line_width = 20;
+    var line_width = 2;
+
+    var start = game_display_3d.gridCoordToPixel(edge_coord.x, edge_coord.y);
+
     if (edge_coord.direction == direction_vertical) {
-        var xp = border + edge_coord.x * cell_width;
-        drawline(ctx
-            , xp, border + edge_coord.y * cell_width
-            , xp, border + (edge_coord.y + 1) * cell_width
-            , colour, line_width, dash );
+        var end = game_display_3d.gridCoordToPixel(edge_coord.x, edge_coord.y + 1);
     }
     else {
-        var yp = border + edge_coord.y * cell_width
-        drawline(ctx
-            , border + edge_coord.x * cell_width, yp
-            , border + (edge_coord.x + 1) * cell_width , yp
-            , colour, line_width, dash );
+        var end = game_display_3d.gridCoordToPixel(edge_coord.x + 1, edge_coord.y);
     }
+    drawline(ctx , start[0], start[1], end[0], end[1], colour, line_width, dash );
 }
 
 function drawEdge(ctx, edge_coord, edge ) {
@@ -134,7 +145,7 @@ function drawEdge(ctx, edge_coord, edge ) {
     if (edge.type === null)
         return;
 
-    var corner_border = 5;
+    var corner_border = 0.1;
 
     if ( edge.type === utility_type_destroyed )
         var colour = 'red';
@@ -148,35 +159,34 @@ function drawEdge(ctx, edge_coord, edge ) {
     var line_width = 3;
 
     if (edge_coord.direction == direction_vertical) {
-        var xp = border + edge_coord.x * cell_width;
-        drawline(ctx
-            , xp, border + edge_coord.y * cell_width + corner_border
-            , xp, border + (edge_coord.y + 1) * cell_width - corner_border
-            , colour, line_width, dash );
+        var start = game_display_3d.gridCoordToPixel(edge_coord.x, edge_coord.y + corner_border);
+        var end = game_display_3d.gridCoordToPixel(edge_coord.x, edge_coord.y + 1 - corner_border);
     }
     else {
-        var yp = border + edge_coord.y * cell_width
-        drawline(ctx
-            , border + edge_coord.x * cell_width + corner_border, yp
-            , border + (edge_coord.x + 1) * cell_width - corner_border, yp
-            , colour, line_width, dash );
+        var start = game_display_3d.gridCoordToPixel(edge_coord.x + corner_border, edge_coord.y);
+        var end = game_display_3d.gridCoordToPixel(edge_coord.x + 1 - corner_border, edge_coord.y);
     }
-
-  
+    drawline(ctx , start[0], start[1], end[0], end[1], colour, line_width, dash );
 }
 
 function drawBoard(game, ctx) {
-    ctx.fillStyle = "rgb( 255, 255, 255 )";
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect (0, 0, width, height);
+    ctx.font = '17px Calibri';
 
-    for (var y = 0; y < board_height; ++y)
+    //TODO: draw generators
+    /*for (var y = 0; y < board_height; ++y)
         for (var x = 0; x < board_width; ++x) {
             var cell = game.cells[y][x];
             if( !cell.generator )
                 continue;
-            ctx.fillStyle = "rgb( 255, 255, 200 )";
-            ctx.fillRect( border + x * cell_width, border + y * cell_width, cell_width, cell_width );
-        }
+            ctx.fillStyle = "rgb( 255, 255, 200)";
+        }*/
+
+    if (window.game_display_3d) {
+        var t1 = window.game_display_3d.gridCoordToPixel(0, 0);
+        var t2 = window.game_display_3d.gridCoordToPixel(1, 1);
+        var cell_width = Math.abs(t1[1] - t2[1]);
+    }
 
     //Draw "can move" highlights
     for (var i = 0; i < 2; ++i) {
@@ -185,7 +195,6 @@ function drawBoard(game, ctx) {
             var row_width = board_width + (i == 0 ? 0 : 1);
             for (var x = 0; x < row_width; ++x) {
                 var edge = game.edges[i][y][x];
-
                 var edge_coord = { direction: i, x: x, y: y };
                 var can_build_here = false;
                 for( var type = 1; type <= 4; ++type )
@@ -202,18 +211,6 @@ function drawBoard(game, ctx) {
         }
     }
 
-    ctx.fillStyle = "rgb(0,0,0)";
-    for( var y = 0; y <= board_height; ++y )
-    {
-        var yp = y * cell_width + border;
-        ctx.fillRect(border, yp, board_width * cell_width, 1);
-    }
-    for (var x = 0; x <= board_width; ++x) {
-        var xp = x * cell_width + border;
-        ctx.fillRect(xp, border, 1, board_height * cell_width);
-    }
-
-
     //Draw edges
     for (var i = 0; i < 2; ++i) {
         var column_height = board_height + (i == 0 ? 1 : 0);
@@ -227,7 +224,6 @@ function drawBoard(game, ctx) {
     }
 
     //Draw sources
-
     for (var y = 0; y < board_height + 1; ++y) {
         for (var x = 0; x < board_width + 1; ++x) {
             var corner = game.corners[y][x];
@@ -235,31 +231,34 @@ function drawBoard(game, ctx) {
                 continue;
 
             if (corner.source.owner === null)
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = textColor;
             else
                 ctx.fillStyle = player_colours[corner.source.owner];
 
-            ctx.fillText(utility_letter[ corner.source.type ], border + cell_width * x - 17, border + cell_width * y - 5);
+            var pos = game_display_3d.gridCoordToPixel(x, y);
+            ctx.fillText(utility_letter[ corner.source.type ], pos[0] - 3, pos[1] - 10);
         }
     }
 
     //Draw cells
-
     for (var y = 0; y < board_height; ++y) {
         for (var x = 0; x < board_width; ++x) {
             var cell = game.cells[y][x];
 
             if (cell.level > 1) {
-                ctx.fillStyle = 'black';
-                ctx.fillText( '' + (cell.level -1), border + cell_width * x + cell_width / 2 - 5, border + cell_width * y + cell_width / 2 - 20 );
+                ctx.fillStyle = textColor;
+                var pos = game_display_3d.gridCoordToPixel(x, y);
+                ctx.fillText( '' + (cell.level -1), pos[0], pos[1] - cell_width * 0.6);
             }
             
             for (var type = 1; type < 5; ++type) {
-                if (cell.supplied[type] === null)
+                if (cell.supplied[type] === null) {
                     continue;
-
+                }
+                var pos = game_display_3d.gridCoordToPixel(x, y);
                 ctx.fillStyle = player_colours[cell.supplied[type]];
-                ctx.fillText(utility_letter[type], border + cell_width * x + 5 + type * 10, border + cell_width * y + cell_width / 2 + 5);
+                var offset = (type - 1) * cell_width * 0.2;
+                ctx.fillText(utility_letter[type], pos[0] - cell_width * 0.3 + offset, pos[1] - cell_width * 0.5);
             }
         }
     }
@@ -290,19 +289,18 @@ function mouseToElement(coords) {
 
     //First check for corners
 
-    var corner_pos_x = (coords.x - border + cell_width / 2) / cell_width;
-    var corner_pos_y = (coords.y - border + cell_width / 2) / cell_width;
+    var corner_pos_x = coords.x + 0.5;
+    var corner_pos_y = coords.y + 0.5;
     var corner_x = Math.floor( corner_pos_x );
     var corner_y = Math.floor(corner_pos_y);
 
     if ( Math.abs( corner_pos_x - corner_x - 0.5 ) < 0.1 && Math.abs( corner_pos_y - corner_y - 0.5 ) < 0.1)
         return { type: element_type_corner, x: corner_x, y: corner_y };
     
-    var cell_pos_x = (coords.x - border) / cell_width;
-    var cell_pos_y = (coords.y - border) / cell_width;
+    var cell_pos_x = coords.x;
+    var cell_pos_y = coords.y;
     var cell_x = Math.floor(cell_pos_x);
     var cell_y = Math.floor(cell_pos_y);
-
 
     //Vertical lines
 
@@ -341,8 +339,12 @@ function updateStatus( game ) {
         } else {
             status_text += '<br>Player ' + ( game.last_player_index + 1 ) + ' turn'
         }
+
+        document.getElementById("end_turn_form").style.display = null;
+
     } else {
         status_text += "<br>Remote player's turn";
+        document.getElementById("end_turn_form").style.display = "none";
     }
 
     document.getElementById("status").innerHTML = status_text;
@@ -377,10 +379,6 @@ function buildButton(e) {
 
     var menu_box = document.getElementById("build_menu");
     menu_box.style.display = "none";
-    // wait for server
-
-    // drawBoard(global_game, ctx);
-    // updateStatus( global_game );
 }
 
 
@@ -407,9 +405,11 @@ function show_build_menu(edge_coord, e, player_index ) {
 }
 
 function onClick(e) {
-    var coords = relMouseCoords(this, e);
+    //actual coords, for overlay var coords = relMouseCoords(this, e);
     
-    var selected_element = mouseToElement(coords);
+    var coords = game_display_3d.pixelToGridCoord( e.pageX, e.pageY ) 
+
+    var selected_element = mouseToElement( {x: coords[0], y: coords[1] });
 
     if (selected_element && selected_element.type == element_type_edge) {
         show_build_menu(selected_element, e, global_game.last_player_index );

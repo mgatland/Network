@@ -317,8 +317,8 @@ gameDisplay3d.prototype.HandleMouseMove = function( e ) {
 
 gameDisplay3d.prototype.HandleMouseDown = function( e ) {
  	var pixel_coords = relMouseCoords( this.canvas, e );
- 	console.log( pixel_coords );
-    console.log( this.pixelToGridCoord( pixel_coords.x, pixel_coords.y ) );
+ 	// console.log( pixel_coords );
+    // console.log( this.pixelToGridCoord( pixel_coords.x, pixel_coords.y ) );
 
 
 
@@ -330,7 +330,6 @@ gameDisplay3d.prototype.HandleMouseUp = function( e ) {
     this.current_drag = null;
     e.preventDefault();
 }
-
 
 gameDisplay3d.prototype.resetContext = function( ) {
 	this.gl = WebGLUtils.setupWebGL(this.canvas);
@@ -376,7 +375,6 @@ gameDisplay3d.prototype.gridCoordToPixel = function( x, y ) {
 
 	var pixel_loc = vec4.create();
 	mat4.multiplyVec4( this.view_proj, [ x, y, 0.0, 1.0 ], pixel_loc );
-	console.log( pixel_loc );
 	return [ ( ( pixel_loc[ 0] / pixel_loc[ 3 ] ) + 1 ) / 2 * this.canvas.width, ( 1.0 -( ( pixel_loc[ 1] / pixel_loc[ 3 ] ) + 1 ) / 2 ) * this.canvas.height ];
 }
 
