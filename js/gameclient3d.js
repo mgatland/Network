@@ -129,6 +129,10 @@ function houseModel( gl, height ) {
 		width_scale, -width_scale, 0.0,				0.0, 0.0, 1.0,
 		width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
 		-width_scale, width_scale, 0.0,				0.0, 0.0, 1.0,
+
+
+
+		
 		-width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
 		width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
 		width_scale, width_scale, height_scale,		0.0, 0.0, 1.0,
@@ -286,6 +290,7 @@ function gameDisplay3d( game ) {
 }
 
 gameDisplay3d.prototype.HandleMouseMove = function( e ) {
+
     if ( !this.current_drag )
         return;
 
@@ -293,9 +298,17 @@ gameDisplay3d.prototype.HandleMouseMove = function( e ) {
     var identity = mat4.create();
     mat4.identity(identity);
     mat4.rotateZ(identity, this.rotation, this.rotation_matrix);
+
+
 }
 
 gameDisplay3d.prototype.HandleMouseDown = function( e ) {
+ 	var pixel_coords = relMouseCoords( this.canvas, e );
+ 	console.log( pixel_coords );
+    console.log( this.pixelToGridCoord( pixel_coords.x, pixel_coords.y ) );
+
+
+
     this.current_drag = { start_x: e.clientX, start_rotation: this.rotation };
     e.preventDefault();
 }
@@ -343,6 +356,34 @@ function rgbStringToArray( s ) {
 	return s.substring( s.indexOf( "(") + 1,s.indexOf( ")") ).split( ',').map( function( s1 ){ return parseInt( s1.trim() ) / 255.0; } ).concat( [1.0]);
 }
 
+gameDisplay3d.prototype.gridCoordToPixel = function( x, y ) {
+
+	var pixel_loc = vec4.create();
+	mat4.multiplyVec4( this.view_proj, [ x, y, 0.0, 1.0 ], pixel_loc );
+	console.log( pixel_loc );
+	return [ ( ( pixel_loc[ 0] / pixel_loc[ 3 ] ) + 1 ) / 2 * this.canvas.width, ( 1.0 -( ( pixel_loc[ 1] / pixel_loc[ 3 ] ) + 1 ) / 2 ) * this.canvas.height ];
+}
+
+gameDisplay3d.prototype.pixelToGridCoord = function( x, y ) {
+	var cursor_pos = vec3.create();
+	cursor_pos[ 0 ] = ((( 2.0 * x ) / this.canvas.width ) - 1.0 ) / this.proj[ 0 ];
+	cursor_pos[ 1 ] = -((( 2.0 * y ) / this.canvas.height ) - 1.0 ) / this.proj[ 5 ];
+	cursor_pos[ 2 ] = -1.0;
+
+	var inverse_view = mat4.create();
+	mat4.inverse( this.view, inverse_view );
+
+	var ray_direction = vec4.create();
+	mat4.multiplyVec4( inverse_view, [ 0, 0, 1, 0], ray_direction );
+	vec3.normalize( ray_direction );
+
+	var ray_origin = vec3.create();
+	mat4.multiplyVec3( inverse_view, cursor_pos, ray_origin );
+
+	var scalar = -( ray_origin[ 2 ] / ray_direction [ 2 ] );
+	return [ ray_origin[ 0 ] + ray_direction[ 0 ] * scalar, ray_origin[ 1 ] + ray_direction[ 1 ] * scalar ]
+}
+
 gameDisplay3d.prototype.renderFrame = function( ) {
 
 	//this.board_model.colour = rgbStringToArray( document.getElementById( "board").style.color );
@@ -385,7 +426,7 @@ gameDisplay3d.prototype.renderFrame = function( ) {
 
     this.view = mat4.create();
     mat4.lookAt(this.cam_position, [ board_width / 2, board_height / 2,0], [0, 0, -1], this.view);
-    //mat4.lookAt(this.cam_position, [ 0.0, 0.0, 0.0], [0, 0, -1], this.view);
+    //mat4.lookAt(this.cam_position, [ 0.0, 0.0, 0.0], [0, 1, 0], this.view);
 
     this.view_proj = mat4.create();
     mat4.multiply(this.proj, this.view, this.view_proj);  
