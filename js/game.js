@@ -219,8 +219,11 @@ function drawBoard(game, ctx) {
                         can_build_here = true;
                         break;
                     }
-                if( game.canDestroyElement( edge_coord, game.last_player_index ))
-                    can_build_here = true;
+                if( game.canDestroyElement( edge_coord, game.last_player_index )) {
+                    //we can destroy our own edges, but it does not count as a normal move so isn't highlighted
+                    if (game.edges[edge_coord.direction][edge_coord.y][edge_coord.x].player !== game.last_player_index)
+                        can_build_here = true;
+                }
 
                 if( can_build_here )
                     drawHighlight( ctx, edge_coord )
