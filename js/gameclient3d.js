@@ -5,13 +5,13 @@ var team_colours = [
 ]
 
 function bindBuffer( shader ) {
-	this.gl.disableVertexAttribArray( 2 );
-
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
     this.gl.enableVertexAttribArray(shader.position_attribute);
-    this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 24, 0);
+    this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 32, 0);
     this.gl.enableVertexAttribArray(shader.normal_attribute)
-    this.gl.vertexAttribPointer(shader.normal_attribute, 3, this.gl.FLOAT, false, 24, 12);
+    this.gl.vertexAttribPointer(shader.normal_attribute, 3, this.gl.FLOAT, false, 32, 12);
+    this.gl.enableVertexAttribArray( shader.uv_attribute );
+    this.gl.vertexAttribPointer( shader.uv_attribute, 2, this.gl.FLOAT, false, 32, 24 );
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.index_buffer);
 }
 
@@ -50,10 +50,10 @@ function boardModel( gl ) {
 	mat4.identity( this.transform );
 
 	var vertices = [
-		0.0, 0.0, 0.0, 					0.0, 0.0, 1.0,
-		board_width, 0.0, 0.0, 			0.0, 0.0, 1.0,
-		board_width, board_height, 0.0, 0.0, 0.0, 1.0,
-		0.0, board_height, 0.0, 		0.0, 0.0, 1.0
+		0.0, 0.0, 0.0, 					0.0, 0.0, 1.0,   0, 0,
+		board_width, 0.0, 0.0, 			0.0, 0.0, 1.0,	0, 0,
+		board_width, board_height, 0.0, 0.0, 0.0, 1.0, 0, 0,
+		0.0, board_height, 0.0, 		0.0, 0.0, 1.0, 0, 0
 	];
 
 	var indices = [
@@ -92,17 +92,21 @@ function gridLineModel( gl ) {
 	for( var x = 0; x <= board_width; ++x ) {
 		vertices.push( x ); vertices.push( 0 ); vertices.push( 0 );
 		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+		vertices.push( 0 ); vertices.push( 0 );
 
 		vertices.push( x ); vertices.push( board_height ); vertices.push( 0 );
 		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+		vertices.push( 0 ); vertices.push( 0 );
 	}
 
 	for( var y = 0; y <= board_height; ++y ) {
 		vertices.push( 0 ); vertices.push( y ); vertices.push( 0 );
 		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+		vertices.push( 0 ); vertices.push( 0 );
 
 		vertices.push( board_width ); vertices.push( y ); vertices.push( 0 );
 		vertices.push( 0 ); vertices.push( 0 ); vertices.push( 1 );
+		vertices.push( 0 ); vertices.push( 0 );
 	}
 
 
@@ -140,30 +144,30 @@ function houseModel( gl, height ) {
 	var height_scale = height * ( Math.random() * 0.5 + 0.75 );
 
 	var vertices = [
-		-width_scale, -width_scale, 0.0,			0.0, -1.0, 0.0,
-		width_scale, -width_scale, 0.0,				0.0, -1.0, 0.0,
-		-width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,
-		width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,
+		-width_scale, -width_scale, 0.0,			0.0, -1.0, 0.0,  0,0,
+		width_scale, -width_scale, 0.0,				0.0, -1.0, 0.0,  0,0,
+		-width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,  0,0,
+		width_scale, -width_scale, height_scale,	0.0, -1.0, 0.0,  0,0,
 
-		width_scale, -width_scale, 0.0,				1.0, 0.0, 0.0,
-		width_scale, width_scale, 0.0,				1.0, 0.0, 0.0,
-		width_scale, -width_scale, height_scale,	1.0, 0.0, 0.0,
-		width_scale, width_scale, height_scale,		1.0, 0.0, 0.0,
+		width_scale, -width_scale, 0.0,				1.0, 0.0, 0.0,  0,0,
+		width_scale, width_scale, 0.0,				1.0, 0.0, 0.0,  0,0,
+		width_scale, -width_scale, height_scale,	1.0, 0.0, 0.0,  0,0,
+		width_scale, width_scale, height_scale,		1.0, 0.0, 0.0,  0,0,
 
-		width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,
-		-width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,
-		width_scale, width_scale, height_scale,		0.0, 1.0, 0.0,
-		-width_scale, width_scale, height_scale,	0.0, 1.0, 0.0,
+		width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,  0,0,
+		-width_scale, width_scale, 0.0,				0.0, 1.0, 0.0,  0,0,
+		width_scale, width_scale, height_scale,		0.0, 1.0, 0.0,  0,0,
+		-width_scale, width_scale, height_scale,	0.0, 1.0, 0.0,  0,0,
 
-		-width_scale, width_scale, 0.0,				-1.0, 0.0, 0.0,
-		-width_scale, -width_scale, 0.0,			-1.0, 0.0, 0.0,
-		-width_scale, width_scale, height_scale,	-1.0, 0.0, 0.0,
-		-width_scale, -width_scale, height_scale,	-1.0, 0.0, 0.0,
+		-width_scale, width_scale, 0.0,				-1.0, 0.0, 0.0,  0,0,
+		-width_scale, -width_scale, 0.0,			-1.0, 0.0, 0.0,  0,0,
+		-width_scale, width_scale, height_scale,	-1.0, 0.0, 0.0,  0,0,
+		-width_scale, -width_scale, height_scale,	-1.0, 0.0, 0.0,  0,0,
 
-		-width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
-		width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,
-		-width_scale, width_scale, height_scale,	0.0, 0.0, 1.0,
-		width_scale, width_scale, height_scale,		0.0, 0.0, 1.0,
+		-width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,  0,0,
+		width_scale, -width_scale, height_scale,	0.0, 0.0, 1.0,  0,0,
+		-width_scale, width_scale, height_scale,	0.0, 0.0, 1.0,  0,0,
+		width_scale, width_scale, height_scale,		0.0, 0.0, 1.0,  0,0
 	];
 
 	var indices = [
