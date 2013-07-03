@@ -1,6 +1,8 @@
 
 
 function bindBuffer( shader ) {
+	this.gl.disableVertexAttribArray( 2 );
+	
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
     this.gl.enableVertexAttribArray(shader.position_attribute);
     this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 24, 0);
@@ -330,6 +332,7 @@ function gameDisplay3d( game ) {
     this.edge_models = { 
     	edge: [ 
 	    	null, 
+	    	//new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
 	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
 	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ], 0, this.textures.whiteblack ), 
 	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ], 0, this.textures.whiteblack ), 
@@ -348,7 +351,7 @@ function gameDisplay3d( game ) {
     	],
     	straight: [
     		null,
-    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
+    	    new Obj( "models/utility_road_straight_test.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
 	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ], 0 , this.textures.whiteblack ),
 	    	new Obj( "models/utility_power_straight.obj", [ -1, 5, 0.0], 0, this.textures.road ),
 	    	new Obj( "models/utility_internet_straight.obj", [ 0, 5, 0.0], 0, this.textures.road )
@@ -687,8 +690,8 @@ function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
     }
 
     this.position_attribute = gl.getAttribLocation(this.shader_program, "local_position");
+    this.normal_attribute = gl.getAttribLocation(this.shader_program, "local_normal"); 
     this.uv_attribute = gl.getAttribLocation(this.shader_program, "local_uv");
-    this.normal_attribute = gl.getAttribLocation(this.shader_program, "local_normal");
     // this.tangent_attribute = gl.getAttribLocation(this.shader_program, "local_tangent");
     // this.bone_indices_attribute = gl.getAttribLocation(this.shader_program, "bone_indices");
     // this.blend_weights_attribute = gl.getAttribLocation(this.shader_program, "blend_weights");
