@@ -485,8 +485,24 @@ function gameDisplay3d( game ) {
     };
 
     this.conMap = {};
+    //straight * 2
 	this.conMap["1 1 "] = { model: this.corner_models.straight, rot: 1 };
 	this.conMap[" 1 1"] = { model: this.corner_models.straight, rot: 0 };
+	//T intersection * 4
+	this.conMap[" 111"] = { model: this.corner_models.T, rot: 1 };
+	this.conMap["1 11"] = { model: this.corner_models.T, rot: 0 };
+	this.conMap["11 1"] = { model: this.corner_models.T, rot: 3 };
+	this.conMap["111 "] = { model: this.corner_models.T, rot: 2 };
+	//corner * 4
+	this.conMap["11  "] = { model: this.corner_models.corner, rot: 1 };
+	this.conMap[" 11 "] = { model: this.corner_models.corner, rot: 0 };
+	this.conMap["  11"] = { model: this.corner_models.corner, rot: 3 };
+	this.conMap["1  1"] = { model: this.corner_models.corner, rot: 2 };
+	//all * 1
+	this.conMap["1111"] = { model: this.corner_models.X, rot: 0 };
+	//dead end * 4 (not rendered)
+	//nothing * 1 (not rendered)
+	//16 combinations in total
 
 	var self = this;
 	var cell_displays = null;
