@@ -230,7 +230,7 @@ function drawBoard(game, ctx) {
             }
         }
     }
-
+/*
     //Draw edges
     for (var i = 0; i < 2; ++i) {
         var column_height = board_height + (i == 0 ? 1 : 0);
@@ -282,7 +282,7 @@ function drawBoard(game, ctx) {
             }
         }
     }
-
+*/
     drawPlayerHUD(game, ctx);
 }
 
