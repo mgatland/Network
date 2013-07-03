@@ -215,12 +215,14 @@ function houseModel( gl, height ) {
 houseModel.prototype.bindBuffer = bindBuffer;
 houseModel.prototype.draw = draw;
 
-function cellDisplay( game, house_models, x, y ) {
+function cellDisplay( game, house_models, cell_models, x, y ) {
 	this.house_models = house_models;
+	this.cell_models = cell_models;
 	this.game = game;
 	this.level = 0;
 	this.x = x;
 	this.y = y;
+	this.supply_buildings = [ { owner: null, model: null }, { owner: null, model: null }, { owner: null, model: null } ];
 
 	this.previous_houses_sink = null;
 	this.previous_houses = null;
@@ -239,17 +241,20 @@ cellDisplay.prototype.setToLevel = function( level ) {
 	if( this.level < 2 )
 		return;
 
-	var spawn_chance = [ 0.5, 0.8, 0.9 ];
+	var spawn_chance = [ 0.7, 1.0, 1.0 ];
 
 	for( var y = 0; y < 3; ++y )
 		for( var x = 0; x < 3; ++x ) {
+
+			if( x + y < 2 )
+				continue;
 
 			if( Math.random() > spawn_chance[ this.level - 2 ] )
 				continue;
 
 			var transform = mat4.create();
 			mat4.identity( transform );
-			mat4.translate( transform, [ this.x + x * 0.25 + 0.25, this.y + y * 0.25 + 0.25, 0.0 ] );
+			mat4.translate( transform, [ this.x + x * 0.25 + 0.15, this.y + y * 0.25 + 0.15, 0.0 ] );
 
 			var house =  Object.create( this.house_models[ this.level - 2 ][ Math.floor( Math.random() * this.house_models[ this.level - 2 ].length ) ] );
 			house.transform = transform;
@@ -260,6 +265,25 @@ cellDisplay.prototype.setToLevel = function( level ) {
 	this.current_houses_raise = -0.7;
 }
 
+cellDisplay.prototype.setSupplyBuilding = function( type, owner ) {
+
+	if( owner === null ) {
+		this.supply_buildings[ type - 2 ] = { owner: null, model: null };
+		return;
+	}
+
+	this.supply_buildings[ type - 2 ] = { owner: owner, model: {} };
+	var model = this.supply_buildings[ type - 2 ].model;
+
+	model.__proto__ = this.cell_models.supplied[ type ];
+	model.team_colour = team_colours[ owner ];
+	var translate = mat4.create();
+	mat4.identity( translate );
+	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
+	model.transform = mat4.create();
+	mat4.multiply( translate, this.cell_models.supplied[ type ].transform, model.transform );
+}
+
 cellDisplay.prototype.draw = function( shader ) {
 	if( this.previous_houses )
 		for( var i = 0; i < this.previous_houses.length; ++i )
@@ -268,10 +292,20 @@ cellDisplay.prototype.draw = function( shader ) {
 		this.current_houses[ i ].draw( shader );
 }
 
+cellDisplay.prototype.drawWithTeam = function( shader ) {
+	for( var i = 0; i < 3; ++i )
+		if( this.supply_buildings[ i ].model )
+			this.supply_buildings[ i ].model.draw( shader );
+}
+
 cellDisplay.prototype.frameMove = function( elapsed_time ) {
 	var cell = this.game.cells[ this.y ][ this.x ];
 	if( cell.level != this.level )
 		this.setToLevel( cell.level );
+
+	for( var type = 2; type < 5; ++type )
+		if( cell.supplied[ type ] !== this.supply_buildings[ type - 2 ].owner )
+			this.setSupplyBuilding( type, cell.supplied[ type ] );
 
 	if( this.previous_houses_sink !== null ) {
 		this.previous_houses_sink -= elapsed_time * 1.0;
@@ -452,15 +486,14 @@ function gameDisplay3d( game ) {
     };
 
     var roadColour = [0.2, 0.2, 0.2, 1];
-    var WaterColour = [0xF2/0xFF, 0xE1/0xFF, 0x72/0xFF, 1];
-    var powerColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
-    var internetColour = [0.4, 0.4, 0.4, 1];
+    var WaterColour = [ 1.0, 1.0, 1.0, 1.0]; //[0xF2/0xFF, 0xE1/0xFF, 0x72/0xFF, 1];
+    var powerColour = [ 1.0, 1.0, 1.0, 1.0]; //[0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
+    var internetColour = [ 1.0, 1.0, 1.0, 1.0]; //[0.4, 0.4, 0.4, 1];
 
     this.bulldozer = new Obj( "js/Bulldozer.obj");
     this.edge_models = { 
     	edge: [ 
 	    	null, 
-	    	//new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
 	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road, roadColour ), 
 	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ], 0, this.textures.whiteblack, WaterColour ), 
 	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ], 0, this.textures.whiteblack, powerColour ), 
@@ -505,6 +538,16 @@ function gameDisplay3d( game ) {
 	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0], 0, this.textures.whiteblack, powerColour ), 
 	    	new Obj( "models/utility_internet_X.obj", [ 0, 5.8, 0], 0, this.textures.whiteblack, internetColour )
     	]    	
+    };
+
+    this.cell_models = {
+    	supplied: [ 
+    		null,
+    		null,
+    		new Obj( "models/supplied_water.obj", [ 0, 4, 0], 3, this.textures.whiteblack, WaterColour ),
+    		new Obj( "models/supplied_power.obj", [ -0.1, 4.1, 0], 3, this.textures.whiteblack, powerColour ),
+    		new Obj( "models/supplied_internet.obj", [ 0, 4, 0], 3, this.textures.whiteblack, internetColour ),
+    	]
     };
 
     this.conMap = {};
@@ -609,9 +652,9 @@ gameDisplay3d.prototype.resetContext = function( ) {
     this.grid_model = new gridLineModel( this.gl );
 
     this.house_models = [
-    	[ new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ), new houseModel( this.gl, 0.2 ) ],
-    	[ new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ), new houseModel( this.gl, 0.4 ) ],
-    	[ new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ) ]
+    	[ new houseModel( this.gl, 0.1 ), new houseModel( this.gl, 0.1 ), new houseModel( this.gl, 0.1 ), new houseModel( this.gl, 0.2 ) ],
+    	[ new houseModel( this.gl, 0.3 ), new houseModel( this.gl, 0.3 ), new houseModel( this.gl, 0.3 ), new houseModel( this.gl, 0.4 ) ],
+    	[ new houseModel( this.gl, 0.5 ), new houseModel( this.gl, 0.5 ), new houseModel( this.gl, 0.5 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ), new houseModel( this.gl, 0.7 ) ]
     ];
 
     var self = this;
@@ -630,13 +673,14 @@ gameDisplay3d.prototype.resetContext = function( ) {
 
     resetContextOnAll( this.edge_models );
     resetContextOnAll( this.corner_models );
+    resetContextOnAll( this.cell_models );
     resetContextOnAll( this.textures );
 
     this.cell_displays = new Array( board_height );
     for( var y = 0; y < board_height; ++y ) {
     	this.cell_displays[ y ] = new Array( board_width );
     	for( var x = 0; x < board_width; ++x ) {
-    		this.cell_displays[ y ][ x ] = new cellDisplay( this.game, this.house_models, x, y );
+    		this.cell_displays[ y ][ x ] = new cellDisplay( this.game, this.house_models, this.cell_models, x, y );
     	}
     }
 
@@ -670,6 +714,7 @@ gameDisplay3d.prototype.lostContext = function( ) {
     	for( key in models ) {
     		var sub = models[ key ];
     		if( !sub )
+
     			continue;
     		if( sub instanceof Array ) {
     			lostContextOnAll( sub );
@@ -682,6 +727,7 @@ gameDisplay3d.prototype.lostContext = function( ) {
     lostContextOnAll( this.edge_models );
     lostContextOnAll( this.corner_models );
     lostContextOnAll( this.textures );
+    lostContextOnAll( this.cell_models );
 
 	this.bulldozer.lostContext( );
 
@@ -824,6 +870,11 @@ gameDisplay3d.prototype.renderFrame = function( ) {
         }
     }
 
+    for( var y = 0; y < board_height; ++y ) {
+    	for( var x = 0; x < board_width; ++x ) {
+    		this.cell_displays[ y ][ x ].drawWithTeam( this.team_shader );
+    	}
+    }
 
     for( var y = 0; y < board_height + 1; ++y )
     	for( var x = 0; x < board_width + 1; ++x ) {
