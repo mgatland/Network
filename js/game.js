@@ -158,7 +158,7 @@ function drawHighlight( ctx, edge_coord ) {
 }
 
 function drawEdge(ctx, edge_coord, edge ) {
-
+    return;
     if (edge.type === null)
         return;
 

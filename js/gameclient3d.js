@@ -1,8 +1,12 @@
 
+var team_colours = [
+	[ 0.0, 0.0, 1.0, 1.0 ],
+	[ 1.0, 0.0, 0.0, 1.0 ]
+]
 
 function bindBuffer( shader ) {
 	this.gl.disableVertexAttribArray( 2 );
-	
+
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
     this.gl.enableVertexAttribArray(shader.position_attribute);
     this.gl.vertexAttribPointer(shader.position_attribute, 3, this.gl.FLOAT, false, 24, 0);
@@ -290,7 +294,7 @@ edgeDisplay.prototype.setToType = function( type, player ) {
 
 	this.model = {};
 	this.model.__proto__ = this.edge_models.edge[ type ];
-	this.model.team_colour = [ 1.0, 0.0, 0.0, 1.0 ];
+	this.model.team_colour = team_colours[ player ];
 	var translate = mat4.create();
 	mat4.identity( translate );
 	mat4.translate( translate, [ this.x, this.y + ( this.direction ? 1 : 0 ), 0.0 ] );
@@ -311,6 +315,52 @@ edgeDisplay.prototype.draw = function( shader ) {
 		return;
 
 	this.model.draw( shader );
+}
+
+function cornerDisplay( game, corner_models, x, y ) {
+	this.game = game;
+	this.corner_models = corner_models;
+	this.x = x;
+	this.y = y;
+	this.source_model = null;
+	this.source_type = null;
+	this.source_owner = null;
+
+	var corner = game.corners[ y ][ x ];
+	if( corner.source !== null ) {
+		this.sourceChanged( corner.source );
+	}
+}
+
+cornerDisplay.prototype.sourceChanged = function( source ) {
+
+	this.source_type = source.type;
+	this.source_owner = source.owner;
+
+	var base_model = this.corner_models.sources[ source.type ];
+	this.source_model = { }
+	this.source_model.__proto__ = base_model;
+	this.source_model.transform = mat4.create();
+	var translate = mat4.create();
+	mat4.identity( translate );
+	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
+	mat4.multiply( translate, base_model.transform, this.source_model.transform );
+	if( source.owner !== null )
+		this.source_model.team_colour = team_colours[ source.owner ];
+	else
+		this.source_model.team_colour = [ 0.5, 0.5, 0.5, 1.0 ];
+
+}
+
+cornerDisplay.prototype.frameMove = function( elapsed_time ) {
+	var corner = this.game.corners[ this.y ][ this.x ];
+	if( corner.source && ( this.source_type !== corner.source.type || this.source_owner !== corner.source.owner ) )
+		this.sourceChanged( corner.source );
+}
+
+cornerDisplay.prototype.draw = function( shader ) {
+	if( this.source_model )
+		this.source_model.draw( shader );
 }
 
 function gameDisplay3d( game ) {
@@ -498,6 +548,14 @@ gameDisplay3d.prototype.resetContext = function( ) {
         }
     }
 
+    this.corner_displays = new Array( board_height + 1 );
+    for( var y = 0; y < board_height + 1; ++y ) {
+    	this.corner_displays[ y ] = new Array( board_width + 1 );
+    	for( var x = 0; x < board_width + 1; ++x ) {
+    		this.corner_displays[ y ][ x ] = new cornerDisplay( this.game, this.corner_models, x, y );
+    	}
+    }
+
     this.bulldozer.resetContext( this.gl );
 }
 
@@ -589,6 +647,10 @@ gameDisplay3d.prototype.renderFrame = function( ) {
         }
     }
 
+    for( var y = 0; y < board_height + 1; ++y )
+    	for( var x = 0; x < board_width + 1; ++x ) {
+    		this.corner_displays[ y ][ x ].frameMove( elapsed_time );
+    	}
 
     //Handle window size change
     if (this.canvas.clientWidth != this.canvas.width || this.canvas.clientHeight != this.height)
@@ -656,6 +718,10 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     }
 
 
+    for( var y = 0; y < board_height + 1; ++y )
+    	for( var x = 0; x < board_width + 1; ++x ) {
+    		this.corner_displays[ y ][ x ].draw( this.team_shader );
+    	}
 
     var i = 0;
     function renderX( models ) {
