@@ -376,6 +376,10 @@ function gameDisplay3d( game ) {
     	]    	
     };
 
+    this.conMap = {};
+	this.conMap["1010"] = { model: this.corner_models.straight, rot: 0 };
+	this.conMap["0101"] = { model: this.corner_models.straight, rot: 1 };
+
 	var self = this;
 	var cell_displays = null;
 
@@ -672,6 +676,21 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     }
 
     renderX( this.corner_models );
+
+    //Update corner connections
+    for (var y = 0; y < board_height + 1; ++y) {
+        for (var x = 0; x < board_width + 1; ++x) {
+            var corner = this.game.corners[y][x];
+        	for (var type = 0; type < 4; ++type) {
+        		for (var owner = 0; owner < 2; ++owner) {
+            		//TODO: handle source
+            		var conData = this.game.getConnectionData(x, y, type, owner);
+            		var modelData = this.conMap[conData];
+            		//type, owner.
+            	}
+            }
+        }
+    }
 }
 
 function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
