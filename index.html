@@ -107,8 +107,8 @@
 
                 //vec3 world_binormal = -cross( world_normal, world_tangent ) * local_tangent.w;
 
-                vec3 light_direction = normalize( vec3( sin( time ), cos( time ), 1.0 ) );
-                light = dot( light_direction, world_normal );
+                vec3 light_direction = normalize( vec3( -1, 0, 1.0 ) );
+                light = dot( light_direction, world_normal ) * 0.7 + 0.3;
                 //tangent_light_direction.xyz = vec3( dot( world_tangent, light_direction ), dot( world_binormal, light_direction ), dot( world_normal, light_direction ) );
 
                 uv = local_uv;

@@ -145,10 +145,10 @@ Obj.prototype.DoLoadObj = function ( text )
                     vertex_data.push(z);
 
                     //Dummy tangents
-                    vertex_data.push(1.0);
-                    vertex_data.push(0.0);
-                    vertex_data.push(0.0);
-                    vertex_data.push(1.0);
+                    // vertex_data.push(1.0);
+                    // vertex_data.push(0.0);
+                    // vertex_data.push(0.0);
+                    // vertex_data.push(1.0);
 
                     // do the textures
                     x = 0;
@@ -168,10 +168,10 @@ Obj.prototype.DoLoadObj = function ( text )
             }
         }
     }
-
+   /*
     var vertex_stride = 12;
     var num_vertices = vertex_data.length / vertex_stride;
-
+ 
     var tan1 = new Array( num_vertices * 3 );
     var tan2 = new Array( num_vertices * 3 );
     for( var i = 0; i < num_vertices * 3; ++i )
@@ -269,7 +269,7 @@ Obj.prototype.DoLoadObj = function ( text )
 
         var ct2d = crossx * tan2[ vti + 0 ] + crossy * tan2[ vti + 1 ] + crossz * tan2[ vti + 2 ];
         vertex_data[ vi + 9 ] = ( ct2d < 0.0 ? -1.0 : 1.0 );
-    }
+    }*/
 
     this.index_data = index_data;
     this.vertex_data = vertex_data;
@@ -324,16 +324,16 @@ Obj.prototype.bindBuffer = function( shader )
     //Bind vertex buffer
     gl.bindBuffer( gl.ARRAY_BUFFER, this.vertex_buffer );
     gl.enableVertexAttribArray( shader.position_attribute );
-    gl.vertexAttribPointer( shader.position_attribute, 3, gl.FLOAT, false, 48, 0 );
+    gl.vertexAttribPointer( shader.position_attribute, 3, gl.FLOAT, false, 32, 0 );
     gl.enableVertexAttribArray( shader.normal_attribute );
-    gl.vertexAttribPointer( shader.normal_attribute, 3, gl.FLOAT, false, 48, 12 );
+    gl.vertexAttribPointer( shader.normal_attribute, 3, gl.FLOAT, false, 32, 12 );
     /*
     gl.enableVertexAttribArray( shader.tangent_attribute );
     gl.vertexAttribPointer( shader.tangent_attribute, 4, gl.FLOAT, false, 48, 24 );
     */
     if( shader.uv_attribute ) {
         gl.enableVertexAttribArray( shader.uv_attribute );
-        gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 48, 40 );
+        gl.vertexAttribPointer( shader.uv_attribute, 2, gl.FLOAT, false, 32, 24 );
     }
     //Bind index buffer
     gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.index_buffer );
