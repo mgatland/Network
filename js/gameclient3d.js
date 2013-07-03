@@ -1,8 +1,10 @@
 
 var team_colours = [
-	[ 0.0, 0.0, 1.0, 1.0 ],
-	[ 1.0, 0.0, 0.0, 1.0 ]
+	[ 0.2, 0.2, 1.3, 1.0 ],
+	[ 1.3, 0.2, 0.2, 1.0 ]
 ]
+
+var neutralColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
 
 function bindBuffer( shader ) {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -44,7 +46,7 @@ function boardModel( gl ) {
 	this.num_indices = 6;
 	this.primitive_type = this.gl.TRIANGLES;
 	this.index_type = this.gl.UNSIGNED_SHORT;
-	this.colour = [ 0.5, 1.0, 0.5, 1.0 ];
+	this.colour = [ 135/256, 207/256, 81/256, 1 ];
 
 	this.transform = mat4.create( );
 	mat4.identity( this.transform );
@@ -355,7 +357,7 @@ cornerDisplay.prototype.sourceChanged = function( source ) {
 	if( source.owner !== null )
 		this.source_model.team_colour = team_colours[ source.owner ];
 	else
-		this.source_model.team_colour = [ 0.5, 0.5, 0.5, 1.0 ];
+		this.source_model.team_colour = neutralColour;
 
 }
 
@@ -377,7 +379,7 @@ cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotat
 	if( owner !== 2 )
 		model_data.model.team_colour = team_colours[ owner ];
 	else
-		this.source_model.team_colour = [ 0.5, 0.5, 0.5, 1.0 ];	
+		this.source_model.team_colour = neutralColour;	
 	model_data.rotation = rotation;
 }
 
@@ -433,54 +435,59 @@ function gameDisplay3d( game ) {
     	road: new Texture( "models/road.png")
     };
 
+    var roadColour = [0.2, 0.2, 0.2, 1];
+    var WaterColour = [0xF2/0xFF, 0xE1/0xFF, 0x72/0xFF, 1];
+    var powerColour = [0.4, 0.4, 0.4, 1];
+    var internetColour = [1, 0.7, 0.7, 1];
+
     this.bulldozer = new Obj( "js/Bulldozer.obj");
     this.edge_models = { 
     	edge: [ 
 	    	null, 
 	    	//new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
-	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road ), 
-	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ], 0, this.textures.whiteblack ), 
-	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ], 0, this.textures.whiteblack ), 
-	    	new Obj( "models/utility_internet_edge.obj", [0,4,0], 0, this.textures.whiteblack ),
-	    	new Obj( "models/utility_rubble_edge.obj", [-2,2.5,0], 0, this.textures.whiteblack )
+	    	new Obj( "models/utility_road_edge.obj", [0,0,0], 1, this.textures.road, roadColour ), 
+	    	new Obj( "models/utility_water_edge.obj", [ 0, 1, 0 ], 0, this.textures.whiteblack, WaterColour ), 
+	    	new Obj( "models/utility_power_edge.obj", [ -1, 1,0 ], 0, this.textures.whiteblack, powerColour ), 
+	    	new Obj( "models/utility_internet_edge.obj", [0,4,0], 0, this.textures.whiteblack, powerColour ),
+	    	new Obj( "models/utility_rubble_edge.obj", [-2,2.5,0], 0, this.textures.whiteblack, internetColour )
     	],
     };
 
     this.corner_models = {
     	sources: [
     		null,
-    		new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road ),
-    		new Obj( "models/source_water.obj", [ 0, 1, 0], 0, this.textures.whiteblack ),
-    		new Obj( "models/source_electricity.obj", [ -1, 1, 0 ], 0, this.textures.whiteblack ),
-    		new Obj( "models/source_internet.obj", [ 0, 6.2, 0], 0, this.textures.whiteblack )
+    		new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road, roadColour ),
+    		new Obj( "models/source_water.obj", [ 0, 1, 0], 0, this.textures.whiteblack, WaterColour ),
+    		new Obj( "models/source_electricity.obj", [ -1, 1, 0 ], 0, this.textures.whiteblack, powerColour ),
+    		new Obj( "models/source_internet.obj", [ 0, 6.2, 0], 0, this.textures.whiteblack, internetColour )
     	],
     	straight: [
     		null,
-    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
-	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ], 0 , this.textures.whiteblack ),
-	    	new Obj( "models/utility_power_straight.obj", [ -1, 5, 0.0], 0, this.textures.road ),
-	    	new Obj( "models/utility_internet_straight.obj", [ 0, 5, 0.0], 0, this.textures.road )
+    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road, roadColour ), 
+	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ], 0 , this.textures.whiteblack, WaterColour ),
+	    	new Obj( "models/utility_power_straight.obj", [ -1, 5, 0.0], 0, this.textures.road, powerColour ),
+	    	new Obj( "models/utility_internet_straight.obj", [ 0, 5, 0.0], 0, this.textures.road, internetColour )
     	],
     	corner: [
     		null,
-    	    new Obj( "models/utility_road_corner.obj", [0, 0, 0], 0, this.textures.road ),
-	    	new Obj( "models/utility_water_corner.obj" , [ 0, 2, 0 ], 2, this.textures.whiteblack ),
-	    	new Obj( "models/utility_power_corner.obj", [ -1, 2, 0 ], 2, this.textures.whiteblack ),
-	    	new Obj( "models/utility_internet_corner.obj", [ 0, 6.6, 0 ], 2, this.textures.whiteblack )  //Internet
+    	    new Obj( "models/utility_road_corner.obj", [0, 0, 0], 0, this.textures.road, roadColour ),
+	    	new Obj( "models/utility_water_corner.obj" , [ 0, 2, 0 ], 2, this.textures.whiteblack, WaterColour ),
+	    	new Obj( "models/utility_power_corner.obj", [ -1, 2, 0 ], 2, this.textures.whiteblack, powerColour ),
+	    	new Obj( "models/utility_internet_corner.obj", [ 0, 6.6, 0 ], 2, this.textures.whiteblack, internetColour )  //Internet
     	],
     	T: [
     		null,
-    	    new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ], 0, this.textures.road ), 
-	    	new Obj( "models/utility_water_T.obj", [ 0, 2.6, 0], 2, this.textures.whiteblack ), 
-	    	new Obj( "models/utility_power_T.obj", [ -1, 3, 0 ], 0, this.textures.whiteblack ), 
-	    	new Obj( "models/utility_internet_T.obj", [ 0, 5.4, 0 ], 1, this.textures.whiteblack )
+    	    new Obj( "models/utility_road_T.obj", [ 1, 0, 0 ], 0, this.textures.road, roadColour ), 
+	    	new Obj( "models/utility_water_T.obj", [ 0, 2.6, 0], 2, this.textures.whiteblack, WaterColour ), 
+	    	new Obj( "models/utility_power_T.obj", [ -1, 3, 0 ], 0, this.textures.whiteblack, powerColour ), 
+	    	new Obj( "models/utility_internet_T.obj", [ 0, 5.4, 0 ], 1, this.textures.whiteblack, internetColour )
     	],
     	X: [
     		null,
-    	    new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road ), 
-	    	new Obj( "models/utility_water_X.obj", [ 0.6, 2, 0 ], 0, this.textures.whiteblack), 
-	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0], 0, this.textures.whiteblack ), 
-	    	new Obj( "models/utility_internet_X.obj", [ 0, 5.8, 0], 0, this.textures.whiteblack )
+    	    new Obj( "models/utility_road_X.obj", [ 1.4, 0, 0], 0, this.textures.road, roadColour ), 
+	    	new Obj( "models/utility_water_X.obj", [ 0.6, 2, 0 ], 0, this.textures.whiteblack, WaterColour), 
+	    	new Obj( "models/utility_power_X.obj", [ -1, 4, 0], 0, this.textures.whiteblack, powerColour ), 
+	    	new Obj( "models/utility_internet_X.obj", [ 0, 5.8, 0], 0, this.textures.whiteblack, internetColour )
     	]    	
     };
 

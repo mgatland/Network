@@ -1,6 +1,6 @@
 
 
-function Obj( url, offset, rotationsZ, team_colour_mask, asset )
+function Obj( url, offset, rotationsZ, team_colour_mask, colour )
 {
     if( !offset )
         this.offset = [ 0.0, 0.0, 0.0 ];
@@ -13,6 +13,7 @@ function Obj( url, offset, rotationsZ, team_colour_mask, asset )
         this.rotationsZ = rotationsZ;
 
     this.team_colour_mask = team_colour_mask;
+    this.colour = colour;
 
     this.vertex_data = null;
     this.index_data = null;
@@ -299,7 +300,6 @@ Obj.prototype.resetContext = function ( gl ) {
     
     this.num_indices = this.index_data.length;
     this.primitive_type = gl.TRIANGLES;
-    this.colour = [ 1.0, 1.0, 1.0, 1.0 ];
     this.index_type = gl.UNSIGNED_SHORT;
 
     this.transform = mat4.create();
