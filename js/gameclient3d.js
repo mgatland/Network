@@ -401,7 +401,7 @@ function gameDisplay3d( game ) {
     	],
     	straight: [
     		null,
-    	    new Obj( "models/utility_road_straight_test.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
+    	    new Obj( "models/utility_road_straight.obj", [ 1.8, 0.0, 0.0], 1, this.textures.road ), 
 	    	new Obj( "models/utility_water_straight.obj", [ 0.2, 2, 0 ], 0 , this.textures.whiteblack ),
 	    	new Obj( "models/utility_power_straight.obj", [ -1, 5, 0.0], 0, this.textures.road ),
 	    	new Obj( "models/utility_internet_straight.obj", [ 0, 5, 0.0], 0, this.textures.road )
