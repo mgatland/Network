@@ -4,6 +4,8 @@ var team_colours = [
 	[ 1.3, 0.2, 0.2, 1.0 ]
 ]
 
+var groundColour = [ 135/256, 207/256, 81/256, 1 ];
+
 var neutralColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
 
 function bindBuffer( shader ) {
@@ -46,7 +48,7 @@ function boardModel( gl ) {
 	this.num_indices = 6;
 	this.primitive_type = this.gl.TRIANGLES;
 	this.index_type = this.gl.UNSIGNED_SHORT;
-	this.colour = [ 135/256, 207/256, 81/256, 1 ];
+	this.colour = groundColour;
 
 	this.transform = mat4.create( );
 	mat4.identity( this.transform );
@@ -437,8 +439,8 @@ function gameDisplay3d( game ) {
 
     var roadColour = [0.2, 0.2, 0.2, 1];
     var WaterColour = [0xF2/0xFF, 0xE1/0xFF, 0x72/0xFF, 1];
-    var powerColour = [0.4, 0.4, 0.4, 1];
-    var internetColour = [1, 0.7, 0.7, 1];
+    var powerColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
+    var internetColour = [0.4, 0.4, 0.4, 1];
 
     this.bulldozer = new Obj( "js/Bulldozer.obj");
     this.edge_models = { 
