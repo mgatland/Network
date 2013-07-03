@@ -530,9 +530,9 @@ function gameDisplay3d( game ) {
     	supplied: [ 
     		null,
     		null,
-    		new Obj( "models/supplied_water.obj", [ 0, 4, 0], 3, this.textures.whiteblack ),
-    		new Obj( "models/supplied_power.obj", [ -0.1, 4.1, 0], 3, this.textures.whiteblack ),
-    		new Obj( "models/supplied_internet.obj", [ 0, 4, 0], 3, this.textures.whiteblack ),
+    		new Obj( "models/supplied_water.obj", [ 0, 4, 0], 3, this.textures.whiteblack, WaterColour ),
+    		new Obj( "models/supplied_power.obj", [ -0.1, 4.1, 0], 3, this.textures.whiteblack, powerColour ),
+    		new Obj( "models/supplied_internet.obj", [ 0, 4, 0], 3, this.textures.whiteblack, internetColour ),
     	]
     };
 
