@@ -5,6 +5,8 @@ var team_colours = [
 ]
 
 var groundColour = [ 135/256, 207/256, 81/256, 1 ];
+var generatorGroundColour = [ 255/256, 255/256, 81/256, 1 ];
+
 
 var neutralColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
 
@@ -42,28 +44,41 @@ function draw( shader ) {
 	this.gl.drawElements( this.primitive_type, this.num_indices, this.index_type, 0 );
 }
 
-function boardModel( gl ) {
+function addVertex(vertices, x, y) {
+	vertices.push(x, y, 0, 0, 0, 1, 0, 0);
+}
+
+function boardModel( gl, game, forGenerators ) {
 	this.gl = gl;
 
-	this.num_indices = 6;
 	this.primitive_type = this.gl.TRIANGLES;
 	this.index_type = this.gl.UNSIGNED_SHORT;
-	this.colour = groundColour;
+	this.colour = forGenerators ? generatorGroundColour: groundColour;
 
 	this.transform = mat4.create( );
 	mat4.identity( this.transform );
 
-	var vertices = [
-		0.0, 0.0, 0.0, 					0.0, 0.0, 1.0,   0, 0,
-		board_width, 0.0, 0.0, 			0.0, 0.0, 1.0,	0, 0,
-		board_width, board_height, 0.0, 0.0, 0.0, 1.0, 0, 0,
-		0.0, board_height, 0.0, 		0.0, 0.0, 1.0, 0, 0
-	];
+	var vertices = [];
+	var indices = [];
 
-	var indices = [
-		0, 1, 2,
-		0, 2, 3
-	]
+	//add a square for every cell
+	var a = 0;
+	for (var y = 0; y < board_height; ++y) {
+		for (var x = 0; x < board_width; ++x) {
+
+			var generator = game.cells[y][x].generator;
+			if (generator !== forGenerators) continue;
+
+			addVertex(vertices, x, y);
+			addVertex(vertices, x+1, y);
+			addVertex(vertices, (x+1), (y+1));
+			addVertex(vertices, (x), (y+1));
+			indices.push(0+a, 1+a, 2+a);
+			indices.push(0+a, 2+a, 3+a);
+			a += 4;
+		}
+	}
+	this.num_indices = indices.length;
 
 	this.vertex_buffer = this.gl.createBuffer();
 	this.gl.bindBuffer( this.gl.ARRAY_BUFFER, this.vertex_buffer );
@@ -360,7 +375,6 @@ cornerDisplay.prototype.sourceChanged = function( source ) {
 		this.source_model.team_colour = team_colours[ source.owner ];
 	else
 		this.source_model.team_colour = neutralColour;
-
 }
 
 cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotation ) {
@@ -547,6 +561,13 @@ function gameDisplay3d( game ) {
     handleContextRestored();
 }
 
+gameDisplay3d.prototype.regenBoard = function () {
+	if (!this.gl)
+		return;
+    this.board_model_generators = new boardModel( this.gl, global_game, true);
+    this.board_model_normal = new boardModel( this.gl, global_game, false);   
+}
+
 gameDisplay3d.prototype.HandleMouseMove = function( e ) {
 
     if ( !this.current_drag )
@@ -584,7 +605,7 @@ gameDisplay3d.prototype.resetContext = function( ) {
     this.shader = new ShaderProgram( this.gl, "VertexShader", "PixelShader");
     this.team_shader = new ShaderProgram( this.gl, "VertexShader", "PixelShaderWithTeam");
 
-    this.board_model = new boardModel( this.gl );
+	this.regenBoard(); 
     this.grid_model = new gridLineModel( this.gl );
 
     this.house_models = [
@@ -668,7 +689,8 @@ gameDisplay3d.prototype.lostContext = function( ) {
     this.edge_displays = null;
 	this.house_models = null;
 	this.grid_model = null;
-	this.board_model = null;
+	this.board_model_generators = null;
+	this.board_model_normal = null;
 	this.shader = null;
 	this.team_shader = null;
 	this.gl = null;
@@ -777,7 +799,8 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     var time_float = current_time % 100000 / 1000.0;
     this.gl.uniform1f( this.shader.time, time_float );
 
-    this.board_model.draw( this.shader );
+    this.board_model_generators.draw( this.shader );
+    this.board_model_normal.draw( this.shader );
     this.grid_model.draw( this.shader );
 
     for( var y = 0; y < board_height; ++y ) {

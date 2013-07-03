@@ -48,6 +48,7 @@ function connect() {
         global_game.updateData(data);
         drawBoard(global_game, ctx);
         updateStatus( global_game );
+        game_display_3d.regenBoard();
     });
 
     socket.on('message', function (msg) {
