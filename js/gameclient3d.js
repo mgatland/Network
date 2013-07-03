@@ -4,8 +4,8 @@ var team_colours = [
 	[ 1.3, 0.2, 0.2, 1.0 ]
 ]
 
-var groundColour = [ 0.5, 1.0, 0.5, 1.0 ]; //[ 135/256, 207/256, 81/256, 1 ];
-var generatorGroundColour = [ 255/256, 255/256, 81/256, 1 ];
+var groundColour = [ 240/256, 240/256, 150/256, 1 ];  //[ 135/256, 207/256, 81/256, 1 ];
+var generatorGroundColour = [ 0.5, 1.0, 0.5, 1.0 ];
 
 var neutralColour = [0xA8/0xFF, 0x99/0xFF, 0x9E/0xFF, 1];
 
