@@ -525,6 +525,31 @@
 	ClientGame.prototype.canBuildElement = game.prototype.canBuildElement;
 	ClientGame.prototype.canDestroyElement = game.prototype.canDestroyElement;
 
+	ClientGame.prototype.getConnectionData = function ( x, y, type, owner) {
+		var adjacentEdges = [];
+    	adjacentEdges.push(this.getEdgeConnectionData(direction_horizontal, x - 1, y, type, owner));
+    	adjacentEdges.push(this.getEdgeConnectionData(direction_horizontal, x, y, type, owner));
+    	adjacentEdges.push(this.getEdgeConnectionData(direction_vertical, x, y - 1, type, owner));
+    	adjacentEdges.push(this.getEdgeConnectionData(direction_vertical, x, y, type, owner ));
+	    return adjacentEdges.join("");
+	}
+
+	ClientGame.prototype.getEdgeConnectionData = function (dir, x, y, type, owner) {
+		if (x < 0 || y < 0 || x > board_width || y > board_height)
+			return " ";
+		if (dir === direction_horizontal && x === board_width)
+			return " ";
+		if (dir === direction_vertical && y === board_height)
+			return " ";
+
+		var edge_coord = { direction: dir, x: x, y: y };
+		var edge = this.edges[dir][y][x];
+		if (edge.type === type && edge.owner === owner)
+			return "1";
+		return " ";
+	}
+
+
 	ClientGame.prototype.updateData = function (data) {
 		this.started = true; //only needed on first update
 		this.cells = data.cells;
