@@ -525,16 +525,16 @@
 	ClientGame.prototype.canBuildElement = game.prototype.canBuildElement;
 	ClientGame.prototype.canDestroyElement = game.prototype.canDestroyElement;
 
-	ClientGame.prototype.getConnectionData = function ( x, y, type, owner) {
+	ClientGame.prototype.getConnectionData = function ( x, y, type, player) {
 		var adjacentEdges = [];
-    	adjacentEdges.push(this.getEdgeConnectionData(direction_horizontal, x - 1, y, type, owner));
-    	adjacentEdges.push(this.getEdgeConnectionData(direction_horizontal, x, y, type, owner));
-    	adjacentEdges.push(this.getEdgeConnectionData(direction_vertical, x, y - 1, type, owner));
-    	adjacentEdges.push(this.getEdgeConnectionData(direction_vertical, x, y, type, owner ));
+    	adjacentEdges[0] = this.getEdgeConnectionData(direction_horizontal, x, y, type, player);
+    	adjacentEdges[1] = this.getEdgeConnectionData(direction_vertical, x, y - 1, type, player);
+    	adjacentEdges[2] = this.getEdgeConnectionData(direction_horizontal, x - 1, y, type, player);
+    	adjacentEdges[3] = this.getEdgeConnectionData(direction_vertical, x, y, type, player );
 	    return adjacentEdges.join("");
 	}
 
-	ClientGame.prototype.getEdgeConnectionData = function (dir, x, y, type, owner) {
+	ClientGame.prototype.getEdgeConnectionData = function (dir, x, y, type, player) {
 		if (x < 0 || y < 0 || x > board_width || y > board_height)
 			return " ";
 		if (dir === direction_horizontal && x === board_width)
@@ -542,9 +542,8 @@
 		if (dir === direction_vertical && y === board_height)
 			return " ";
 
-		var edge_coord = { direction: dir, x: x, y: y };
 		var edge = this.edges[dir][y][x];
-		if (edge.type === type && edge.owner === owner)
+		if (edge.type === type && edge.player === player)
 			return "1";
 		return " ";
 	}

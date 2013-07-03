@@ -317,14 +317,17 @@ edgeDisplay.prototype.draw = function( shader ) {
 	this.model.draw( shader );
 }
 
-function cornerDisplay( game, corner_models, x, y ) {
+function cornerDisplay( game, corner_models, connection_map, x, y ) {
 	this.game = game;
+	this.connection_map = connection_map;
 	this.corner_models = corner_models;
 	this.x = x;
 	this.y = y;
 	this.source_model = null;
 	this.source_type = null;
 	this.source_owner = null;
+
+	this.type_models = [ [], [], [], [], [] ];
 
 	var corner = game.corners[ y ][ x ];
 	if( corner.source !== null ) {
@@ -352,15 +355,63 @@ cornerDisplay.prototype.sourceChanged = function( source ) {
 
 }
 
+cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotation ) {
+	var model_data = this.type_models[ type ][ owner ];
+
+	model_data.model = null;
+	if( !model )
+		return;
+
+	model_data.model =  { };
+	model_data.model.__proto__ = model[ type ];
+	model_data.model.transform = mat4.create();
+	var translate = mat4.create();
+	mat4.identity( translate );
+	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
+	mat4.rotateZ( translate, Math.PI / 2  * rotation );
+	mat4.multiply( translate, model[ type ].transform, model_data.model.transform );
+	if( owner !== 2 )
+		model_data.model.team_colour = team_colours[ owner ];
+	else
+		this.source_model.team_colour = [ 0.5, 0.5, 0.5, 1.0 ];	
+	model_data.rotation = rotation;
+}
+
 cornerDisplay.prototype.frameMove = function( elapsed_time ) {
 	var corner = this.game.corners[ this.y ][ this.x ];
 	if( corner.source && ( this.source_type !== corner.source.type || this.source_owner !== corner.source.owner ) )
 		this.sourceChanged( corner.source );
+
+	for (var type = 1; type < 5; ++type) {
+		if( corner.source && corner.source.type == type )
+			continue;
+		for (var owner = 0; owner < this.game.players.length + 1; ++owner) {
+    		var conData = this.game.getConnectionData( this.x, this.y, type, ( owner == this.game.players.length ? null : owner ) );
+    		var modelData = this.connection_map[conData];
+    		if( !modelData )
+    			modelData = { model: null, rot: null };
+    		
+    		if( this.type_models[ type ][ owner ] === undefined )
+    			this.type_models[ type ][ owner ] = { model: null, rotation: null };
+
+			var current_model_data = this.type_models[ type ][ owner ];
+    		if( current_model_data.model !== modelData.model || current_model_data.rotation !== modelData.rot ) {
+    			this.cornerModelChanged( type, owner, modelData.model, modelData.rot );
+    		}
+    	}
+    }	
 }
 
 cornerDisplay.prototype.draw = function( shader ) {
 	if( this.source_model )
 		this.source_model.draw( shader );
+
+	for( var type = 0; type < 5; ++type ) {
+		for( var owner = 0; owner < this.type_models[ type ].length; ++owner ) {
+			if( this.type_models[ type ][ owner ].model )
+				this.type_models[ type ][ owner ].model.draw( shader );
+		}
+	}
 }
 
 function gameDisplay3d( game ) {
@@ -430,8 +481,8 @@ function gameDisplay3d( game ) {
     };
 
     this.conMap = {};
-	this.conMap["1010"] = { model: this.corner_models.straight, rot: 0 };
-	this.conMap["0101"] = { model: this.corner_models.straight, rot: 1 };
+	this.conMap["1 1 "] = { model: this.corner_models.straight, rot: 1 };
+	this.conMap[" 1 1"] = { model: this.corner_models.straight, rot: 0 };
 
 	var self = this;
 	var cell_displays = null;
@@ -556,7 +607,7 @@ gameDisplay3d.prototype.resetContext = function( ) {
     for( var y = 0; y < board_height + 1; ++y ) {
     	this.corner_displays[ y ] = new Array( board_width + 1 );
     	for( var x = 0; x < board_width + 1; ++x ) {
-    		this.corner_displays[ y ][ x ] = new cornerDisplay( this.game, this.corner_models, x, y );
+    		this.corner_displays[ y ][ x ] = new cornerDisplay( this.game, this.corner_models, this.conMap, x, y );
     	}
     }
 
@@ -727,39 +778,25 @@ gameDisplay3d.prototype.renderFrame = function( ) {
     		this.corner_displays[ y ][ x ].draw( this.team_shader );
     	}
 
-    var i = 0;
-    function renderX( models ) {
-    	for( key in models ) {
-    		var sub = models[ key ];
-    		if( !sub )
-    			continue;
-    		if( sub instanceof Array ) {
-    			renderX( sub );
-    			continue;
-    		}
-    		if( i == self.x && sub.loaded ) {
-    			sub.draw( self.team_shader );
-			}
-    		++i;
-    	}
-    }
+   //  var i = 0;
+   //  function renderX( models ) {
+   //  	for( key in models ) {
+   //  		var sub = models[ key ];
+   //  		if( !sub )
+   //  			continue;
+   //  		if( sub instanceof Array ) {
+   //  			renderX( sub );
+   //  			continue;
+   //  		}
+   //  		if( i == self.x && sub.loaded ) {
+   //  			sub.draw( self.team_shader );
+			// }
+   //  		++i;
+   //  	}
+   //  }
 
-    renderX( this.corner_models );
+   //  renderX( this.corner_models );
 
-    //Update corner connections
-    for (var y = 0; y < board_height + 1; ++y) {
-        for (var x = 0; x < board_width + 1; ++x) {
-            var corner = this.game.corners[y][x];
-        	for (var type = 0; type < 4; ++type) {
-        		for (var owner = 0; owner < 2; ++owner) {
-            		//TODO: handle source
-            		var conData = this.game.getConnectionData(x, y, type, owner);
-            		var modelData = this.conMap[conData];
-            		//type, owner.
-            	}
-            }
-        }
-    }
 }
 
 function ShaderProgram(gl, vertex_shader_name, pixel_shader_name) {
