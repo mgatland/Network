@@ -1,0 +1,88 @@
+<html>
+<head></head>
+<body>
+<h1>Network</h1>
+
+<p>By Jonathan Rogers and Matthew Gatland</p>
+
+<p>This is an unfinished version of a 2 player strategy game. There's no tutorial yet, so here are some instructions:</p>
+
+<h2>Story</h2>
+
+<p>Two utility companies compete to supply roads, water, power and internet to the most customers.</p>
+
+<h2>Controls</h2>
+
+<ul>
+<li>Command-R to restart.</li>
+<li>Click on a highlighted edge, then choose an option from the pop-up menu.</li>
+<li>You can keep building until you run out of cards or no moves are possible.</li>
+<li>Click on 'end turn' to end your turn and let the other player make their move.</li>
+</ul>
+
+<h2>Building</h2>
+
+<p>At the bottom of the screen are your build cards. You can use these to build <b>roads</b>, <b>water pipes</b>, <b>electricity lines</b> and <b>internet fibre</b>.</p>
+
+<b>Wildcards</b> can be used to build anything.</p>
+
+<p>You start with three road cards. Every turn, you receive one wildcard.</p>
+
+<p>In your turn, click on any highlighted edge to build a new connection. You can build connections until you run out of cards. Then click 'End Turn' to let the other player take their turn.</p>
+
+<p>You must start the game by building a road from a <b>road source</b> on the edge of the board.</p>
+
+<p>You can activate a <b>water source</b>, <b>electricity source</b> or <b>internet source</b> by building a road to it.</p>
+
+<p>You can build pipes, lines and fibre to expand the reach of your sources.</p>
+
+<p>Only one type of connection can be built on each edge. For example, you cannot build a power line on top of a road. However, two different edge types can cross over each other at a corner.</p>
+
+<h2>Cities</h2>
+
+<p>Cities will grow in squares that are supplied with services:</p>
+
+<ul>
+<li>Road - no city</li>
+<li>Road and water - Level 1 City</li>
+<li>Road, water and electricity - Level 2 City</li>
+<li>Road, water, electricity and internet - Level 3 City</li>
+</ul>
+
+<p>If you increase the level of at least one city in your turn, you will receive a bonus card to use next turn. Therefore <b>you should try to increase the level of at least one city in every turn.</b></p>
+
+<p>Note that higher level services only work once lower level services are provided. For example, internet gives no benefit until electricity is provided.</p>
+
+<p>Cities will grow even if different players provide the required services. For example, one player can provide the road while another provides water.</p>
+
+<h2>Disconnecting and reconnecting</h2>
+
+<p>If you have a road that touches part of your opponent's network, you can destroy your opponent's edges. This costs one card of the same type (i.e. to destroy a fibre edge, you need one fibre card or one wildcard.)</p>
+
+<p>If, by destroying an edge, you disconnect part of your opponent's network, that part of the network will become unowned. If your network connects to an unowned network, it will become yours.</p>
+
+<h2>Generator Cities</h2>
+
+<p>A level 3 city on a <b>green square</b> becomes a generator city. Every turn, it provides one additional wildcard to the player who supplies <b>internet</b> to that city. It does not matter who provides the other services to that city.</p>
+
+<p>Providing internet to generator cities is the key to winning the game.</p>
+
+<h2>Ending the game</h2>
+
+<p>The game ends when one player cannot make any moves.</p>
+
+<p>When the game ends, the player with the highest score wins. Scoring is based on providing services to cities:</p>
+
+<ul>
+<li>Road - 0 points</li>
+<li>Water - 1 point</li>
+<li>Electricity - 2 points</li>
+<li>Internet - 4 points</li>
+</ul>
+
+<p>Not that services only work if all lower-level services are also provided. For example, providing internet to a city only gives points if a road, water and electricity are also provided.</p>
+
+<p>If you have a higher score than your opponent, you can try to end the game by blocking your opponent in so they cannot make any more moves.</p>
+
+</body>
+</html>
