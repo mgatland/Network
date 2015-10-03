@@ -26,7 +26,7 @@ var cardsImg = loadImage("/js/cards.png");
 
 //connection data
 
-var port = 8080;
+var port = location.port ? location.port : "";
 
 function loadImage(name)
 {
