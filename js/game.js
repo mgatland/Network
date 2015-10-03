@@ -383,8 +383,10 @@ function mouseToElement(coords) {
     var corner_x = Math.floor( corner_pos_x );
     var corner_y = Math.floor(corner_pos_y);
 
-    if ( Math.abs( corner_pos_x - corner_x - 0.5 ) < 0.1 && Math.abs( corner_pos_y - corner_y - 0.5 ) < 0.1)
+    if ( Math.abs( corner_pos_x - corner_x - 0.5 ) < 0.1 && Math.abs( corner_pos_y - corner_y - 0.5 ) < 0.1) {
+        if (corner_x < 0 || corner_x > board_width || corner_y < 0 || corner_y > board_height) return null;
         return { type: element_type_corner, x: corner_x, y: corner_y };
+    }
     
     var cell_pos_x = coords.x;
     var cell_pos_y = coords.y;
@@ -393,14 +395,23 @@ function mouseToElement(coords) {
 
     //Vertical lines
 
-    if (Math.abs(corner_pos_x - corner_x - 0.5) < 0.1)
-        return { type: element_type_edge, direction: direction_vertical, x: corner_x, y: cell_y };
+    if (Math.abs(corner_pos_x - corner_x - 0.5) < 0.1) {
+        var x = corner_x;
+        var y = cell_y;
+        if (x < 0 || x > board_width || y < 0 || y >= board_height) return null;
+        return { type: element_type_edge, direction: direction_vertical, x: x, y: y };
+    }
 
     //Horizontal lines
-    if (Math.abs(corner_pos_y - corner_y - 0.5) < 0.1)
-        return { type: element_type_edge, direction: direction_horizontal, x: cell_x, y: corner_y };
+    if (Math.abs(corner_pos_y - corner_y - 0.5) < 0.1) {
+        var x = cell_x;
+        var y = corner_y;
+        if (x < 0 || x >= board_width || y < 0 || y > board_height) return null;
+        return { type: element_type_edge, direction: direction_horizontal, x: x, y: y };
+    }
 
     //Cells
+    if (cell_x < 0 || cell_x >= board_width || cell_y < 0 || cell_y >= board_height) return null;
 
     return { type: element_type_cell, x: cell_x, y: cell_y };
 }
@@ -481,6 +492,10 @@ function onClick(e) {
     var coords = game_display_3d.pixelToGridCoord( e.pageX, e.pageY ) 
 
     var selected_element = mouseToElement( {x: coords[0], y: coords[1] });
+
+    if (!selected_element) {
+        return;
+    }
 
     if (selected_element && selected_element.type == element_type_edge) {
         show_build_menu(selected_element, e, global_game.last_player_index );

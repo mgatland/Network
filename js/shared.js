@@ -352,8 +352,11 @@
 
 	game.prototype.canBuildElement = function( edge_coord, player_index, element_type ) {
 	    var self = this;
-	    //Not blocked already by another edge
+	    
 	    var edge = this.edges[edge_coord.direction][edge_coord.y][edge_coord.x];
+	    if (!edge)
+	    	return false;
+	    //Not blocked already by another edge
 	    if ( edge.type )
 	        return false;
 
