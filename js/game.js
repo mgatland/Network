@@ -26,7 +26,7 @@ var cardsImg = loadImage("/js/cards.png");
 
 //connection data
 
-var port = 80;
+var port = 8080;
 
 function loadImage(name)
 {
@@ -133,8 +133,7 @@ function endTurnButton( e ) {
 
 function drawline(ctx, x1, y1, x2, y2, colour, width, dash ) {
     ctx.beginPath();
-    ctx.setLineDash(dash);
-    //ctx.mozDash([5, 10]);
+    if (dash) ctx.setLineDash(dash);
     ctx.strokeStyle = colour;
     ctx.lineWidth = width;
     ctx.moveTo( x1, y1);
