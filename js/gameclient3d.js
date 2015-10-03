@@ -427,8 +427,11 @@ cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotat
 	mat4.multiply( translate, model[ type ].transform, model_data.model.transform );
 	if( owner !== 2 )
 		model_data.model.team_colour = team_colours[ owner ];
-	else
-		this.source_model.team_colour = neutralColour;	
+	else {
+		if (this.source_model) {
+			this.source_model.team_colour = neutralColour;		
+		}
+	}
 	model_data.rotation = rotation;
 }
 
