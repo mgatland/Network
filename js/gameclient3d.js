@@ -4,6 +4,13 @@ var team_colours = [
 	[ 1.3, 0.2, 0.2, 1.0 ]
 ]
 
+var getTeamColours = function(team) {
+	if (typeof team === "number" && team >= 0 && team < team_colours.length ) {
+		return team_colours[team];
+	}
+	return neutralColour; //sometimes team === null, sometimes team === 2
+}
+
 var groundColour = [ 240/256, 240/256, 150/256, 1 ];  //[ 135/256, 207/256, 81/256, 1 ];
 var generatorGroundColour = [ 0.5, 1.0, 0.5, 1.0 ];
 
@@ -275,7 +282,7 @@ cellDisplay.prototype.setSupplyBuilding = function( type, owner ) {
 	var model = this.supply_buildings[ type - 2 ].model;
 
 	model.__proto__ = this.cell_models.supplied[ type ];
-	model.team_colour = team_colours[ owner ];
+	model.team_colour = getTeamColours(owner);
 	var translate = mat4.create();
 	mat4.identity( translate );
 	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
@@ -350,7 +357,7 @@ edgeDisplay.prototype.setToType = function( type, player ) {
 
 	this.model = {};
 	this.model.__proto__ = this.edge_models.edge[ type ];
-	this.model.team_colour = team_colours[ player ];
+	this.model.team_colour = getTeamColours(player);
 	var translate = mat4.create();
 	mat4.identity( translate );
 	mat4.translate( translate, [ this.x, this.y + ( this.direction ? 1 : 0 ), 0.0 ] );
@@ -404,10 +411,7 @@ cornerDisplay.prototype.sourceChanged = function( source ) {
 	mat4.identity( translate );
 	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
 	mat4.multiply( translate, base_model.transform, this.source_model.transform );
-	if( source.owner !== null )
-		this.source_model.team_colour = team_colours[ source.owner ];
-	else
-		this.source_model.team_colour = neutralColour;
+	this.source_model.team_colour = getTeamColours(source.owner);
 }
 
 cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotation ) {
@@ -425,13 +429,7 @@ cornerDisplay.prototype.cornerModelChanged = function( type, owner, model, rotat
 	mat4.translate( translate, [ this.x, this.y, 0.0 ] );
 	mat4.rotateZ( translate, Math.PI / 2  * rotation );
 	mat4.multiply( translate, model[ type ].transform, model_data.model.transform );
-	if( owner !== 2 )
-		model_data.model.team_colour = team_colours[ owner ];
-	else {
-		if (this.source_model) {
-			this.source_model.team_colour = neutralColour;		
-		}
-	}
+	model_data.model.team_colour = getTeamColours(owner);
 	model_data.rotation = rotation;
 }
 
