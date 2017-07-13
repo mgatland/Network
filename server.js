@@ -16,8 +16,6 @@ var stateWaiting = 2;
 
 var users = [ ];
 
-io.set('log level', 1); // reduce connection logging
-
 // routing
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
